@@ -7,7 +7,7 @@
 
 namespace IsoLasso::utils
 {
-    bool
+    std::tuple<u_int32_t,u_int32_t>
     ReadSamFile(const IsoLasso::format::Args& arguments);
 
     void

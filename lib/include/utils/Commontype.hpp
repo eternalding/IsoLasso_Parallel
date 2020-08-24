@@ -19,7 +19,7 @@ typedef std::pair<u_int32_t,int32_t> range_type;
 constexpr uint32_t    MAX_EXON_SPAN         {50000}  ;
 constexpr uint32_t    MAX_JUNCTION_COVERAGE {100000} ;
 
-constexpr uint32_t    MIN_GAP_SPAN          {1000}   ; // The minimum length of the gap between two reads to be considered as separate genes.
+constexpr uint32_t    MIN_GAP_SPAN          {100}   ; // The minimum length of the gap between two reads to be considered as separate genes.
 
 constexpr uint32_t    MIN_RG_SIZE           {4}      ; // The minimum number of clustered reads to output.
 constexpr uint32_t    MAX_PE_SPAN           {700000} ; // The minimum span between two ends of paired-end reads

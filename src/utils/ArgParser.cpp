@@ -54,8 +54,7 @@ namespace IsoLasso::utils
                 else if (arg_type=="-o") 
                     Args.OUTPUT_PREFIX=argv[i];
                 else
-                    std::__throw_invalid_argument("Invalid argument!");
-                                                  
+                    std::__throw_invalid_argument("Warning: Invalid argument!");                                                  
             }
         }
         return true;

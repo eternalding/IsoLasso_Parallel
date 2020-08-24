@@ -22,8 +22,11 @@ namespace IsoLasso::format
 
 namespace IsoLasso::utils
 {
-    void printHelpMsg();
-    bool ParseArg(const int& argc ,char* argv[],IsoLasso::format::Args& Args);
+    void 
+    printHelpMsg();
+    
+    bool 
+    ParseArg(const int& argc ,char* argv[],IsoLasso::format::Args& Args);
 }//end of namespace IsoLasso::utils
 
 

@@ -10,7 +10,7 @@
 
 namespace IsoLasso::utils
 {
-    bool
+    std::tuple<u_int32_t,u_int32_t>
     ReadSamFile(const IsoLasso::format::Args& arguments)
     {
         std::ifstream fin(arguments.SAMFILE,std::ios::in);
@@ -29,6 +29,8 @@ namespace IsoLasso::utils
         //Header is now unavailable
         while(fin>>HRecord);
         
+        std::vector<u_int32_t> rg_size;
+
         //Main workflow
         while(fin>>Record)
         {
@@ -37,6 +39,23 @@ namespace IsoLasso::utils
 
             if(Record.ValidBit)
             {
+                //New ReadGroup
+                if(Record.RName!=RG.ChrName || Record.Pos > CurrentRange.second+MIN_GAP_SPAN)
+                {
+
+                    RG_index ++;
+                    rg_size.emplace_back(RG.ReadStart.size());
+
+                    ReadCount+=RG.validSize();                     
+                    if(RG.ReadStart.size()>MIN_RG_SIZE)
+                    {
+                        ProcessReadGroup(RG,CurrentRange);
+                        RG.reset();
+                    }
+                    else if(RG.ReadStart.size()>=0) // RG is not large enough
+                        RG.reset();                    
+                }
+
                 //Initialize ReadGroup
                 if(RG.ChrName=="")
                 {
@@ -44,31 +63,18 @@ namespace IsoLasso::utils
                     RG.ChrName=Record.RName;
                 }
 
-                //New ReadGroup
-                if(Record.RName!=RG.ChrName || Record.Pos > CurrentRange.second+MIN_GAP_SPAN)
-                {
-                    RG_index ++;
-                    ReadCount+=RG.validSize();                     
-                    if(RG.ReadStart.size()>MIN_RG_SIZE)
-                    {
-                        ProcessReadGroup(RG,CurrentRange);
-                        RG.reset();
-                    }
-                    else if(RG.ReadStart.size()>0) // RG is not large enough
-                        RG.reset();
-
-
-                }
-
                 //Add current record to current ReadGroup
                 RG.AddRecord(Record,CurrentRange);
+                u_int32_t current_end {Record.GetRange().second};
+
+                CurrentRange.second = current_end>CurrentRange.second?current_end:CurrentRange.second;
             }
         }
 
-        std::cout<<"Total ReadGroup:"<<RG_index<<std::endl;
-        std::cout<<"Total ReadCount:"<<ReadCount<<std::endl;
+        RG_index ++;
+        ReadCount+=RG.validSize(); 
 
-        return true;
+        return {RG_index,ReadCount};
     }//end of ReadSamFile
 
 

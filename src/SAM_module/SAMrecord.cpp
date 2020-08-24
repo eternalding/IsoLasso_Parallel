@@ -41,7 +41,6 @@ namespace IsoLasso::format
             >>Record.MapQ >>Record.CIGAR>>Record.RNext>>Record.PNext
             >>Record.TLen >>Record.Seq  >>Record.Qual;
             
-
             IsoLasso::utils::Setfields(Record);
             IsoLasso::utils::ParseCIGAR(Record);
 
@@ -176,7 +175,8 @@ namespace IsoLasso::utils
     }
 
     //Concordant paired-end pairs : (99,147) & (83,163)
-    Record.isPairedEnd = (Record.Flag==99)||(Record.Flag==147)||(Record.Flag==83)||(Record.Flag==163);
+    Record.isPairedEnd = (Record.Flag==99)||(Record.Flag==147)||(Record.Flag==83)||(Record.Flag==163)||
+                         (Record.Flag==419)||(Record.Flag==339)||(Record.Flag==355)||(Record.Flag==403);
 
     /*
      * If :

@@ -13,14 +13,14 @@ namespace IsoLasso::format
     class ReadGroup
     {
         public:
-        uint32_t                                            ReadLen             {0} ;
-        std::string                                         ChrName             {""};
-        TwoDimVec<uint32_t>                                 ReadStart               ;
-        TwoDimVec<uint32_t>                                 ReadEnd                 ;
-        std::vector<long>                                   PairendTable            ;
-        std::vector<bool>                                   ValidRead               ;
-        std::vector<uint16_t>                               Direction               ;
-        std::map<std::string,std::map<u_long,u_long>>       QNameQueryTable         ;
+        uint32_t                                                ReadLen             {0} ;
+        std::string                                             ChrName             {""};
+        TwoDimVec<uint32_t>                                     ReadStart               ;
+        TwoDimVec<uint32_t>                                     ReadEnd                 ;
+        std::vector<int32_t>                                   PairendTable            ;
+        std::vector<bool>                                       ValidRead               ;
+        std::vector<uint32_t>                                   Direction               ;
+        std::map<std::string,std::map<uint32_t,uint32_t>>       QNameQueryTable         ;
 
         inline void 
         reset()
@@ -37,11 +37,12 @@ namespace IsoLasso::format
             Direction.shrink_to_fit();
             ReadLen = 0;
             ChrName = "";
+            QNameQueryTable.clear();
             return;
         }
 
         void 
-        AddRecord(const IsoLasso::format::Sam_record& record,range_type&);
+        AddRecord(const IsoLasso::format::Sam_record& record,range_type& current_range);
 
         inline void
         AddPair(const std::vector<u_int32_t>& Start, const std::vector<u_int32_t>& End, const u_int16_t direction,\

@@ -12,8 +12,10 @@ int main(int argc, char* argv[])
 
     IsoLasso::utils::ParseArg(argc,argv,arguments);
     
-    IsoLasso::utils::ReadSamFile(arguments);
-    //ReadSamFile(arguments.SAMFILE);
+    auto [RGcount,readcount] = IsoLasso::utils::ReadSamFile(arguments);
+    
+    std::cout<<"Total ReadGroup:"<<RGcount<<std::endl;
+    std::cout<<"Total ReadCount:"<<readcount<<std::endl;
 
     return 0;
     

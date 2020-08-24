@@ -18,7 +18,7 @@ TEST(Gtest, Gtest_initialization)
 TEST(Arugment_test, ArgParsing)
 {
     char* argv[] = {(char*)"./IsoLasso_Parallel",(char*)"-i",(char*)"test.sam",(char*)"-o",(char*)"output"};
-    int argc = 11;
+    int argc = 5;
 
     IsoLasso::format::Args arguments;
 
@@ -261,11 +261,23 @@ TEST(SAM_utils_test, Paired_end_test){
     expected_result[0]  = 1;
     expected_result[1]  = 0;
 
+    expected_result[2]  = 3;
+    expected_result[3]  = 2;
+
+    expected_result[4]  = 5;
+    expected_result[5]  = 4;
+
     expected_result[6]  = 8;
     expected_result[8]  = 6;
 
     expected_result[7]  = 13;
     expected_result[13] = 7;
+
+    expected_result[10] = 14;
+    expected_result[14] = 10;
+
+    expected_result[11] = 12;
+    expected_result[12] = 11;
 
     expected_result[16] = 17;
     expected_result[17] = 16;
@@ -274,6 +286,5 @@ TEST(SAM_utils_test, Paired_end_test){
     expected_result[26] = 20;
 
     for(auto i=0;i<expected_result.size();i++)
-        EXPECT_EQ(RG.PairendTable[i],expected_result[i]);
-    
+        EXPECT_EQ(RG.PairendTable[i],expected_result[i]);        
 }
