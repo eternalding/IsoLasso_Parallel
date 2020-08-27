@@ -56,7 +56,7 @@ namespace IsoLasso::format
         }
 
         void
-        RemoveLongSpanReads(const uint32_t&,const uint32_t&);        
+        RemoveLongSpanReads(const uint32_t& MAX_EXON_SPAN,const uint32_t& MAX_JUNCTION_COVERAGE);        
 
         inline void
         AddWithoutPair(const IsoLasso::format::Sam_record& Record)

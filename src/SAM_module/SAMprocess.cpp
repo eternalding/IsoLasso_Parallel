@@ -42,11 +42,10 @@ namespace IsoLasso::utils
                 //New ReadGroup
                 if(Record.RName!=RG.ChrName || Record.Pos > CurrentRange.second+MIN_GAP_SPAN)
                 {
-
                     RG_index ++;
                     rg_size.emplace_back(RG.ReadStart.size());
-
-                    ReadCount+=RG.validSize();                     
+                    ReadCount+=RG.validSize();                
+                         
                     if(RG.ReadStart.size()>MIN_RG_SIZE)
                     {
                         ProcessReadGroup(RG,CurrentRange);
