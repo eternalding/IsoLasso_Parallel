@@ -29,10 +29,15 @@ namespace IsoLasso::format
     operator>>(std::istream& fin,Sam_record& Record)
     {
         IsoLasso::format::Args arguments;
-
         Record.reset();
+
         if(std::string oneline;std::getline(fin,oneline))
         {
+            if(oneline[0]=='@')
+            {
+                Record.ValidBit = false;
+                return true;
+            }
             std::istringstream iss(oneline);
             if(iss.fail())
                 throw std::invalid_argument("istringstream failure!");

@@ -3,6 +3,7 @@
 #include <SAM_module/ReadGroup.hpp>
 #include <utils/Commontype.hpp>
 #include <utils/ArgParser.hpp>
+#include <utils/Auxiliario.hpp>
 #include <iostream>
 #include <fstream>
 #include <numeric>
@@ -42,12 +43,13 @@ namespace IsoLasso::utils
                 //New ReadGroup
                 if(Record.RName!=RG.ChrName || Record.Pos > CurrentRange.second+MIN_GAP_SPAN)
                 {
-                    RG_index ++;
                     rg_size.emplace_back(RG.ReadStart.size());
                     ReadCount+=RG.validSize();                
                          
                     if(RG.ReadStart.size()>MIN_RG_SIZE)
                     {
+                        RG.RG_index = RG_index;
+                        RG_index ++;
                         ProcessReadGroup(RG,CurrentRange);
                         RG.reset();
                     }
@@ -64,14 +66,15 @@ namespace IsoLasso::utils
 
                 //Add current record to current ReadGroup
                 RG.AddRecord(Record,CurrentRange);
-                u_int32_t current_end {Record.GetRange().second};
+                int32_t current_end {Record.GetRange().second};
 
                 CurrentRange.second = current_end>CurrentRange.second?current_end:CurrentRange.second;
             }
         }
-
+        
+        ProcessReadGroup(RG,CurrentRange);
         RG_index ++;
-        ReadCount+=RG.validSize(); 
+        ReadCount+=RG.validSize();
 
         return {RG_index,ReadCount};
     }//end of ReadSamFile

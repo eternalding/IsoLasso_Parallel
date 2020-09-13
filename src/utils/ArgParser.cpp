@@ -57,6 +57,8 @@ namespace IsoLasso::utils
                     std::__throw_invalid_argument("Warning: Invalid argument!");                                                  
             }
         }
+        if(Args.OUTPUT_PREFIX=="")
+            Args.OUTPUT_PREFIX = Args.SAMFILE.substr(0,Args.SAMFILE.size()-4);
         return true;
     }
 
