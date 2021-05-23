@@ -43,8 +43,8 @@ namespace IsoLasso::format
                 throw std::invalid_argument("istringstream failure!");
 
             iss>>Record.QName>>Record.Flag >>Record.RName>>Record.Pos
-            >>Record.MapQ >>Record.CIGAR>>Record.RNext>>Record.PNext
-            >>Record.TLen >>Record.Seq  >>Record.Qual;
+               >>Record.MapQ >>Record.CIGAR>>Record.RNext>>Record.PNext
+               >>Record.TLen >>Record.Seq  >>Record.Qual;
             
             IsoLasso::utils::Setfields(Record);
             IsoLasso::utils::ParseCIGAR(Record);
@@ -58,7 +58,6 @@ namespace IsoLasso::format
                         Record.SpliceDir=Opt_field[pos+5]=='+'?1:-1;
                 }
             }
-
             return true;
         }
         return false;

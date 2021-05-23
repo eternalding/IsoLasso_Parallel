@@ -11,13 +11,13 @@ namespace IsoLasso::format
     RangeSet::MinDistance(const std::vector<u_int32_t>& start,const std::vector<u_int32_t>& end)
     {
         u_int32_t current_min {std::numeric_limits<u_int32_t>::max()};
-        for(auto exon_index=0;exon_index<start.size();exon_index++)
+        for(auto seg_index=0;seg_index<start.size();seg_index++)
         {
-            u_long Exon_minDist {MinDistance(range_type(start[exon_index],end[exon_index]))};
-            if (Exon_minDist==0)
+            u_int32_t Seg_minDist {MinDistance(range_type(start[seg_index],end[seg_index]))}; //Distance for current seg to Current Rangeset
+            if (Seg_minDist==0)
                 return 0;
-            else if (current_min> Exon_minDist)
-                current_min = Exon_minDist;
+            else if (current_min> Seg_minDist)
+                current_min = Seg_minDist;
         }
         return current_min;
     }
@@ -25,21 +25,23 @@ namespace IsoLasso::format
     u_int32_t
     RangeSet::MinDistance(const range_type& exon_range)
     {
-        std::map<u_int32_t,u_int32_t>::iterator cvg_iter {coverage.upper_bound(exon_range.first)};
+        auto cvg_iter {coverage.upper_bound(exon_range.first)};
 
-        if(cvg_iter==coverage.end())
+        if(cvg_iter==coverage.end())//exon_range.first larger than all
             return exon_range.first+1-coverage.rbegin()->first;
-        else if (cvg_iter->second==0)
+        else if (cvg_iter->second==0)//Someone's end+1
             return 0; 
         else
         {
             if(cvg_iter->first>exon_range.second)
             {
-                u_int32_t DistFromEnd {int32_t(cvg_iter->first)-int32_t(exon_range.second)};
+                u_int32_t DistFromEnd {cvg_iter->first-exon_range.second};
                 if(cvg_iter!=coverage.begin())
                 {
                     cvg_iter--;
-                    u_int32_t DistFromStart {std::abs(int32_t(exon_range.first)+1-int32_t(cvg_iter->first))};
+                    u_int32_t DistFromStart {cvg_iter->first>exon_range.first?
+                                             cvg_iter->first-exon_range.first+1:
+                                             exon_range.first-cvg_iter->first+1};
                     DistFromEnd = (DistFromEnd>DistFromStart)?DistFromStart:DistFromEnd;
                 }
                 return DistFromEnd;
@@ -87,7 +89,7 @@ namespace IsoLasso::format
     void
     RangeSet::Add(const std::vector<u_int32_t> start,const std::vector<u_int32_t> end)
     {
-        for(auto i=0;i<start.size();i++)
+        for(auto i=0;i<start.size();i++)//Add each segment of the read to current RangeSet 
             UpdateCvg(start[i],end[i],false);
         merge();
         return;
@@ -100,9 +102,9 @@ namespace IsoLasso::format
 
         coverage[exon_start]++;
         coverage[exon_end]++;
-        coverage[exon_end+1];
+        coverage[exon_end+1];//=0
 
-        std::map<u_int32_t,u_int32_t>::iterator cvg_iter_start {coverage.find(exon_start)},\
+        std::map<u_int32_t,u_int32_t>::iterator cvg_iter_start {coverage.find(exon_start)},
                                                 cvg_iter_end   {coverage.find(exon_end)};
         
         if(cvg_iter_start!=cvg_iter_end)

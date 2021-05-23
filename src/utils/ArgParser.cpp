@@ -43,7 +43,7 @@ namespace IsoLasso::utils
     ParseArg(const int& argc ,char* argv[],IsoLasso::format::Args& Args)
     {
         std::string arg_type; 
-        for(auto i=1;i<argc;i++)
+        for(auto i=1;i<argc;++i)
         {
             if (i%2==1)
                 arg_type=argv[i];
