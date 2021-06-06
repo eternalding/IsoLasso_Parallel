@@ -775,24 +775,12 @@ namespace IsoLasso::utils
     {
         //If segments within same read has too high coverage, remove them.
         RG.RemoveLongSpanReads(MAX_EXON_SPAN,MAX_JUNCTION_COVERAGE);
-        /*
-        for(auto read_idx=0;read_idx<RG.ReadStart.size();read_idx++)
-        {   
-            if(read_idx>10)
-                break;
-            std::cout<<"Read "<<read_idx<<std::endl;
-            std::cout<<RG.ValidRead[read_idx]<<std::endl;
-            for(auto i=0;i<RG.ReadStart[read_idx].size();i++)
-                std::cout<<RG.ReadStart[read_idx][i]<<" "<<RG.ReadEnd[read_idx][i]<<std::endl;
-        }
-        */
-
         //Split RG into SubRGs
         std::vector<format::ReadGroup> SubRGs;
         RG.SplitbyRangeSet(SubRGs,MIN_GAP_SPAN);
-        
         RG.reset();
 
+        //Process each sub-readgroup
         for(auto SubRG:SubRGs)
         {
             //Enumerate all boundaries
@@ -804,7 +792,7 @@ namespace IsoLasso::utils
             //Remove Types with Invalid exons and those reads with invalid types and recalculate coverage statistics
             SubRG.CalculateValidExons();
 
-            if(SubRG.validSize()<MIN_RG_SIZE)
+            if(SubRG.validSize() < MIN_RG_SIZE)
                 continue;
                 
             SubRG.WriteStatsToFile(RG_STATS_FS);

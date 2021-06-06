@@ -9,34 +9,16 @@ namespace IsoLasso::Algorithm
     void
     PredExpLevel(format::ReadGroup& RG)
     {
-//#ifdef DEBUG
+#ifdef DEBUG
         utils::Check_ReadGroup(RG);
-//#endif
+#endif
 
-        //std::cout<<"Start Prediction for RG "<<RG.RG_index<<"-"<<RG.SubRG_index<<std::endl;
         TwoDimVec<bool>       Candidate_Isfs;
         std::vector<uint32_t> SubInsts;
         bool                  Reached_Max {true};
 
-        //std::cout<<"Num of exons:"<<RG.ExonBoundary.size()<<std::endl;
-
         //Configs for prediction
         GenerateCandidateIsoform(RG,Candidate_Isfs,SubInsts);
-        //std::cout<<"Stack Isoforms"<<Candidate_Isfs.size()<<std::endl;
-        
-        /*
-        std::cout<<"SubInsts"<<std::endl;
-        for(auto Insts:SubInsts)
-            std::cout<<Insts<<" ";
-        std::cout<<std::endl;
-
-        std::cout<<"Candidate_Isf"<<std::endl;
-        for(auto Isf:Candidate_Isfs)
-        {
-            for(auto idx:Isf)
-                std::cout<<idx<<" ";
-            std::cout<<std::endl;
-        }*/
 
         return;
     }
@@ -47,9 +29,9 @@ namespace IsoLasso::Algorithm
         auto NumExons {RG.ExonBoundary.size()};
         auto MaxExonExplv {0.0},MaxJuncExonExplv {0.0};
         // HyperParameters
-        double exonminfrac = EXON_MIN_FRAC , 
-               juncexpfrac = JUNC_EXP_FRAC ,
-               intronretentionfrac = INTRON_RETENTION_FRAC;
+        double exon_min_frac         = EXON_MIN_FRAC , 
+               junc_exp_frac         = JUNC_EXP_FRAC ,
+               intron_retention_frac = INTRON_RETENTION_FRAC;
         std::vector<bool>   IsVisited(NumExons,false),
                             IntronRetention_Left(RG.ExonBoundary.size(),false),
                             IntronRetention_Right(RG.ExonBoundary.size(),false);
@@ -74,9 +56,9 @@ namespace IsoLasso::Algorithm
             //Choose important exons as start.
             for(auto exon_index=0;exon_index<RG.ExonBoundary.size();exon_index++)
             {
-                bool Is_selected {((!(IntronRetention_Left[exon_index]||IntronRetention_Right[exon_index]) && Explv[exon_index]>=MaxExonExplv*exonminfrac )||
-                                   ( (IntronRetention_Left[exon_index]||IntronRetention_Right[exon_index]) && Explv[exon_index]>=MaxExonExplv*juncexpfrac )||
-                                   ( JuncExplv[exon_index] >= MaxJuncExonExplv*juncexpfrac))
+                bool Is_selected {((!(IntronRetention_Left[exon_index]||IntronRetention_Right[exon_index]) && Explv[exon_index]>=MaxExonExplv*exon_min_frac )||
+                                   ( (IntronRetention_Left[exon_index]||IntronRetention_Right[exon_index]) && Explv[exon_index]>=MaxExonExplv*junc_exp_frac )||
+                                   ( JuncExplv[exon_index] >= MaxJuncExonExplv*junc_exp_frac))
                                    && RG.ExonStats[exon_index][2] <= 0.7
                                  };
                 
@@ -108,7 +90,7 @@ namespace IsoLasso::Algorithm
                 if(END_FLAG)
                     break;
 
-                GetConnectingPaths(RG.ReadSupportMatrix,IsfStart,Path,Explv,StackIsofs,intronretentionfrac);
+                GetConnectingPaths(RG.ReadSupportMatrix,IsfStart,Path,Explv,StackIsofs,intron_retention_frac);
                 
                 std::cout<<"Path"<<std::endl;
                 for(auto exon:Path) std::cout<<exon<<" ";
@@ -171,9 +153,9 @@ namespace IsoLasso::Algorithm
             }
             if(ReachedMax)
             {
-                exonminfrac         = (exonminfrac>1)?0.99:exonminfrac*THERSHOLD_GROWTH;
-                juncexpfrac         = (juncexpfrac>1)?0.99:juncexpfrac*THERSHOLD_GROWTH;
-                intronretentionfrac = (intronretentionfrac>1)?0.99:intronretentionfrac*THERSHOLD_GROWTH;
+                exon_min_frac         = (exon_min_frac>1)?0.99:exon_min_frac*THERSHOLD_GROWTH;
+                junc_exp_frac         = (junc_exp_frac>1)?0.99:junc_exp_frac*THERSHOLD_GROWTH;
+                intron_retention_frac = (intron_retention_frac>1)?0.99:intron_retention_frac*THERSHOLD_GROWTH;
                 Selected_Exon.clear();
                 Selected_Exon.shrink_to_fit();
                 Candidate_Isfs.clear();
@@ -212,20 +194,23 @@ namespace IsoLasso::Algorithm
         LeftExplv.assign(RG.ExonBoundary.size(),0);
         RightExplv.assign(RG.ExonBoundary.size(),0);
 
-        for(auto row=0;row<RG.ExonBoundary.size();row++)
+        for(auto row=0;row<RG.ExonBoundary.size();++row)
         {
-            for(auto col=row+1;col<RG.ExonBoundary.size();col++)
+            for(auto col=row+1;col<RG.ExonBoundary.size();++col)
             {
+                //From row exon to col exon
                 if(RG.ReadSupportMatrix[row][col]>=MIN_JUNC_READ)
                 {
                     Outdegree[row]++;
                     Indegree[col]++;
                 }
+
                 RightExplv[row] += RG.ReadSupportMatrix[row][col];
                 LeftExplv[col]  += RG.ReadSupportMatrix[row][col];
             }
         }
-        //Exon
+
+        //Calculate each exon's expression level
         utils::GetExonExplv(RG,Explv);
         MaxExonExplv = *std::max_element(Explv.begin(),Explv.end());
 
@@ -259,7 +244,7 @@ namespace IsoLasso::Algorithm
 
     void
     GetConnectingPaths(TwoDimVec<uint32_t>& ReadSupportMatrix,
-                       uint32_t& IsfStart,
+                       uint32_t& IsfStart, // Starting exon index
                        std::vector<bool>& Path,
                        std::vector<double>&Explv,
                        TwoDimVec<bool>& StackIsofs,
@@ -274,39 +259,28 @@ namespace IsoLasso::Algorithm
         Stack[0] = IsfStart;
         Stack_Prev[0] = -1;
 
-        while(Stackpt>=0) //Keep traversing
+        while(Stackpt>=0) //Stack is not empty
         {
             uint32_t Current_exon {Stack[Stackpt]};
             bool     ReachedEnd   {true};
-            Path[Current_exon]=true; //Visit
+            Path[Current_exon]  =  true; //Visited
 
             if(!IsVisited[Stackpt];int32_t Prev_Stackpt=Stackpt)
             {
                 IsVisited[Stackpt] = true;
                 std::vector<uint32_t>& OutDegree = ReadSupportMatrix[Current_exon]; //OutDegree for current exon
+
+                //Sort candidate exon by OutDegree value
                 std::vector<uint32_t> ConnectedExons(OutDegree.size());
-                std::iota(ConnectedExons.begin(),ConnectedExons.end(),0);
-                //Sort candidate exon by OutDegree
+                for(auto exon_idx=0;exon_idx<OutDegree.size();++exon_idx)
+                {
+                    if(OutDegree[exon_idx]>=MIN_JUNC_READ)
+                        ConnectedExons.emplace_back(exon_idx);
+                }
                 std::stable_sort(ConnectedExons.begin(), ConnectedExons.end(),
                                 [OutDegree](auto i1, auto i2) {return OutDegree[i1] < OutDegree[i2];});
 
-                if(OutDegree[ConnectedExons[0]]==0)//No Connected Exon
-                    ConnectedExons.erase(ConnectedExons.begin(),ConnectedExons.end());
-                else
-                {
-                    auto threshold { OutDegree[ConnectedExons[0]]<MIN_JUNC_READ
-                                    ?OutDegree[ConnectedExons[0]]
-                                    :MIN_JUNC_READ};
-                    for(auto exon_index=0;exon_index<OutDegree.size();exon_index++)
-                    {
-                        if(OutDegree[ConnectedExons[exon_index]]<MIN_JUNC_READ)//OutDegree is not huge enough
-                        {
-                            ConnectedExons.erase(ConnectedExons.begin()+exon_index,ConnectedExons.end());
-                            break;
-                        }
-                    }
-                } 
-                if(!ConnectedExons.empty()) //Candidate exons
+                if(!ConnectedExons.empty()) //Exist candidate exons
                 {
                     double MaxJuncExpLv {0.0}, MaxExpLv {0.0};
                     bool   HasCandidate {false};
@@ -334,7 +308,7 @@ namespace IsoLasso::Algorithm
                         for(auto index=0;index<ConnectedExons.size();index++)
                         {
                             auto candidate_exon {ConnectedExons[index]};
-                            if(Explv[candidate_exon]>=MaxExpLv*EXON_MIN_FRAC)
+                            if(Explv[candidate_exon] >= MaxExpLv*EXON_MIN_FRAC)
                                 ValidConnectedExons[index] = true;
                             else
                                 ValidConnectedExons[index] = false;
@@ -342,10 +316,10 @@ namespace IsoLasso::Algorithm
                     }
                     //IntronRetention
                     auto NextExon {std::find(ConnectedExons.begin(),ConnectedExons.end(),Current_exon+1)};
-                    if(NextExon!=ConnectedExons.end()) //Intron retention exist
+                    if(NextExon != ConnectedExons.end()) //Intron retention exist
                     {
                         if(Explv[*NextExon]<MaxExpLv*intronretentionfrac)
-                            ValidConnectedExons[std::distance(ConnectedExons.begin(),NextExon)]=false;
+                            ValidConnectedExons[std::distance(ConnectedExons.begin(),NextExon)] = false;
                     }
 
                     //Filter exons with ValidConnectedExons = false
@@ -357,7 +331,7 @@ namespace IsoLasso::Algorithm
                     {
                         Stack.emplace_back(index);
                         Stack_Prev.emplace_back(Prev_Stackpt);
-                        IsVisited.emplace_back(false);
+                        IsVisited[index] = false;
                     }
                     Stackpt += uint32_t(ConnectedExons.size());
                 }
@@ -377,7 +351,6 @@ namespace IsoLasso::Algorithm
                             break;
                     }
                     StackIsofs.emplace_back(Isoform);
-                    std::cout<<"Here"<<std::endl;
                     if(NumIsofs>=MAX_ISOFORM_NUM)
                         break;
                 }
