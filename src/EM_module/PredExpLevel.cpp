@@ -1,8 +1,9 @@
-#include<SAM_module/ReadGroup.hpp>
-#include<EM_module/PredExpLevel.hpp>
-#include<utils/Commontype.hpp>
+#include <SAM_module/ReadGroup.hpp>
+#include <EM_module/PredExpLevel.hpp>
+#include <utils/Commontype.hpp>
 #include <numeric>
 #include <algorithm>
+#include <stack>
 
 namespace IsoLasso::Algorithm
 {
@@ -65,11 +66,12 @@ namespace IsoLasso::Algorithm
                 if(Is_selected)
                     Selected_Exon.emplace_back(exon_index); // Should start from here
             }
+#ifdef DEBUG
             std::cout<<"Selected Exons"<<std::endl;
             for(auto exon:Selected_Exon)
                 std::cout<<exon<<" ";
             std::cout<<std::endl;
-
+#endif
             while(true)
             {         
                 TwoDimVec<bool>   StackIsofs;
@@ -92,6 +94,7 @@ namespace IsoLasso::Algorithm
 
                 GetConnectingPaths(RG.ReadSupportMatrix,IsfStart,Path,Explv,StackIsofs,intron_retention_frac);
                 
+                /*
                 std::cout<<"Path"<<std::endl;
                 for(auto exon:Path) std::cout<<exon<<" ";
                 std::cout<<std::endl;
@@ -102,7 +105,7 @@ namespace IsoLasso::Algorithm
                     for(auto exon:Isf)
                         std::cout<<exon<<" ";
                     std::cout<<std::endl;
-                }
+                }*/
                 if(Candidate_Isfs.size()+StackIsofs.size()>MAX_ISOFORM_NUM)//Exceed maximum Isoform number
                 {
                     ReachedMax = true;
@@ -142,7 +145,7 @@ namespace IsoLasso::Algorithm
 
                 // All StackIsofs found for current IsfStart were saved
                 // to Candidate_Isfs 
-                std::cout<<"StackIsofs"<<StackIsofs.size()<<std::endl;
+                //std::cout<<"StackIsofs"<<StackIsofs.size()<<std::endl;
                 std::vector<uint32_t> SubInstIndex(StackIsofs.size(),CurrentSubInst);
 
                 std::move(SubInstIndex.begin(),SubInstIndex.end(),std::back_inserter(SubInsts));
@@ -244,28 +247,28 @@ namespace IsoLasso::Algorithm
 
     void
     GetConnectingPaths(TwoDimVec<uint32_t>& ReadSupportMatrix,
-                       uint32_t& IsfStart, // Starting exon index
-                       std::vector<bool>& Path,
-                       std::vector<double>&Explv,
+                       uint32_t& IsfStart         , // Starting exon index
+                       std::vector<bool>&     Path,
+                       std::vector<double>&  Explv,
                        TwoDimVec<bool>& StackIsofs,
                        double& intronretentionfrac)
     {
         auto                  nExons {ReadSupportMatrix.size()};
-        std::vector<uint32_t> Stack(nExons,0),Stack_Prev(nExons,0);
+        std::vector<uint32_t> Stack,Stack_Prev;
         std::vector<bool>     IsVisited(nExons,false);
         int32_t               Stackpt {0},NumIsofs {0};
 
+        std::cout<<"Num exons:"<<nExons<<std::endl;
         //Init
-        Stack[0] = IsfStart;
-        Stack_Prev[0] = -1;
+        Stack.emplace_back(IsfStart);
+        Stack_Prev.emplace_back(-1);
 
         while(Stackpt>=0) //Stack is not empty
         {
             uint32_t Current_exon {Stack[Stackpt]};
             bool     ReachedEnd   {true};
             Path[Current_exon]  =  true; //Visited
-
-            if(!IsVisited[Stackpt];int32_t Prev_Stackpt=Stackpt)
+            if(!IsVisited[Stackpt])
             {
                 IsVisited[Stackpt] = true;
                 std::vector<uint32_t>& OutDegree = ReadSupportMatrix[Current_exon]; //OutDegree for current exon
@@ -277,6 +280,7 @@ namespace IsoLasso::Algorithm
                     if(OutDegree[exon_idx]>=MIN_JUNC_READ)
                         ConnectedExons.emplace_back(exon_idx);
                 }
+
                 std::stable_sort(ConnectedExons.begin(), ConnectedExons.end(),
                                 [OutDegree](auto i1, auto i2) {return OutDegree[i1] < OutDegree[i2];});
 
@@ -330,10 +334,11 @@ namespace IsoLasso::Algorithm
                     for(auto index:ConnectedExons)//Put all valid connected exons into stack
                     {
                         Stack.emplace_back(index);
-                        Stack_Prev.emplace_back(Prev_Stackpt);
+                        Stack_Prev.emplace_back(Stackpt);
                         IsVisited[index] = false;
                     }
                     Stackpt += uint32_t(ConnectedExons.size());
+                    std::cout<<"Stackpt:"<<Stackpt<<std::endl;
                 }
                 if(ReachedEnd)//No more candidates
                 {
