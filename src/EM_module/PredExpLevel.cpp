@@ -1,8 +1,10 @@
 #include<SAM_module/ReadGroup.hpp>
 #include<EM_module/PredExpLevel.hpp>
+#include<EM_module/TreeNodes.hpp>
 #include<utils/Commontype.hpp>
 #include <numeric>
 #include <algorithm>
+
 
 namespace IsoLasso::Algorithm
 {
@@ -39,14 +41,33 @@ namespace IsoLasso::Algorithm
                             JuncExplv,
                             LeftExplv(RG.ExonBoundary.size(),0),
                             RightExplv(RG.ExonBoundary.size(),0);
-        std::vector<uint32_t> Selected_Exon,
+        std::vector<int32_t>  Selected_Exon,
                               Indegree(RG.ExonBoundary.size(),0),
                               Outdegree(RG.ExonBoundary.size(),0);
+
+                              
         //Calculate Expression levels for each exon.
         GetExpLv(RG,Explv,JuncExplv,LeftExplv,
                  RightExplv,Indegree,Outdegree,
                  IntronRetention_Left,IntronRetention_Right,
                  MaxExonExplv,MaxJuncExonExplv);
+
+        IsoLasso::utils::Check_ReadGroup(RG);
+
+        //Create tree structure
+        std::vector<IsoLasso::Algorithm::ExonNode> ExonTree;
+        for(auto Exon_idx=0;Exon_idx<NumExons;++Exon_idx)
+            ExonTree.emplace_back(Exon_idx,RG.ReadSupportMatrix[Exon_idx],Explv,JuncExplv);
+        std::cout<<ExonTree.size()<<std::endl;
+        for(auto Exon_idx=0;Exon_idx<NumExons;++Exon_idx)
+        {
+            std::cout<<"Exon "<<Exon_idx<<std::endl;
+            for(auto elem:ExonTree[Exon_idx].getNeighbors())
+                std::cout<<elem.first<<"/"<<elem.second<<" ";
+            std::cout<<std::endl;
+
+        }
+        /*
 
         while(true)
         {
@@ -65,11 +86,15 @@ namespace IsoLasso::Algorithm
                 if(Is_selected)
                     Selected_Exon.emplace_back(exon_index); // Should start from here
             }
+
+#ifdef DEBUG
             std::cout<<"Selected Exons"<<std::endl;
             for(auto exon:Selected_Exon)
                 std::cout<<exon<<" ";
             std::cout<<std::endl;
+#endif
 
+            //Choose different exons as beginning
             while(true)
             {         
                 TwoDimVec<bool>   StackIsofs;
@@ -77,6 +102,7 @@ namespace IsoLasso::Algorithm
                 bool              END_FLAG {true};
                 uint32_t          IsfStart,CurrentSubInst{0};    
                 
+                //Select unvisited exons
                 for(auto exon:Selected_Exon)
                 {
                     if(!IsVisited[exon])
@@ -86,7 +112,8 @@ namespace IsoLasso::Algorithm
                         break;
                     }
                 }
-                //All Starts are used
+
+                //All Exons were visited
                 if(END_FLAG)
                     break;
 
@@ -169,6 +196,7 @@ namespace IsoLasso::Algorithm
         }
         if(Candidate_Isfs.size()!=0)
             FilterImpossibleCandidates(Candidate_Isfs,RG);
+        */
         return;
     }
 
@@ -183,8 +211,8 @@ namespace IsoLasso::Algorithm
              std::vector<double>& JuncExplv,
              std::vector<double>& LeftExplv,
              std::vector<double>& RightExplv,
-             std::vector<uint32_t>& Indegree,
-             std::vector<uint32_t>& Outdegree,
+             std::vector<int32_t>& Indegree,
+             std::vector<int32_t>& Outdegree,
              std::vector<bool>& IntronRetention_Left,
              std::vector<bool>& IntronRetention_Right,
              double& MaxExonExplv,
@@ -256,14 +284,14 @@ namespace IsoLasso::Algorithm
         int32_t               Stackpt {0},NumIsofs {0};
 
         //Init
-        Stack[0] = IsfStart;
+        Stack[0]      = IsfStart;
         Stack_Prev[0] = -1;
 
         while(Stackpt>=0) //Stack is not empty
         {
             uint32_t Current_exon {Stack[Stackpt]};
             bool     ReachedEnd   {true};
-            Path[Current_exon]  =  true; //Visited
+            Path[Current_exon]  =   true; //Visited
 
             if(!IsVisited[Stackpt];int32_t Prev_Stackpt=Stackpt)
             {
