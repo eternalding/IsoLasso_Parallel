@@ -2,8 +2,12 @@
 #include<EM_module/PredExpLevel.hpp>
 #include<EM_module/TreeNodes.hpp>
 #include<utils/Commontype.hpp>
-#include <numeric>
-#include <algorithm>
+#include<numeric>
+#include<algorithm>
+#include<stack>
+#include<set>
+#include<utils/Auxiliario.hpp>
+#include<ranges>
 
 
 namespace IsoLasso::Algorithm
@@ -41,8 +45,7 @@ namespace IsoLasso::Algorithm
                             JuncExplv,
                             LeftExplv(RG.ExonBoundary.size(),0),
                             RightExplv(RG.ExonBoundary.size(),0);
-        std::vector<int32_t>  Selected_Exon,
-                              Indegree(RG.ExonBoundary.size(),0),
+        std::vector<int32_t>  Indegree(RG.ExonBoundary.size(),0),
                               Outdegree(RG.ExonBoundary.size(),0);
 
                               
@@ -52,152 +55,210 @@ namespace IsoLasso::Algorithm
                  IntronRetention_Left,IntronRetention_Right,
                  MaxExonExplv,MaxJuncExonExplv);
 
-        IsoLasso::utils::Check_ReadGroup(RG);
+#ifdef DEBUG
+        std::cout<<"Explv"<<std::endl;
+        for(auto i:Explv)
+            std::cout<<i<<" ";
+        std::cout<<std::endl;
+
+        std::cout<<"Junction level"<<std::endl;
+        for(auto i:JuncExplv)
+            std::cout<<i<<" ";
+        std::cout<<std::endl;
+
+        std::cout<<"Expression level"<<std::endl;
+        for(auto i:Explv)
+            std::cout<<i<<" ";
+        std::cout<<std::endl;
+#endif
+
+        //IsoLasso::utils::Check_ReadGroup(RG);
 
         //Create tree structure
         std::vector<IsoLasso::Algorithm::ExonNode> ExonTree;
         for(auto Exon_idx=0;Exon_idx<NumExons;++Exon_idx)
             ExonTree.emplace_back(Exon_idx,RG.ReadSupportMatrix[Exon_idx],Explv,JuncExplv);
-        std::cout<<ExonTree.size()<<std::endl;
-        for(auto Exon_idx=0;Exon_idx<NumExons;++Exon_idx)
-        {
-            std::cout<<"Exon "<<Exon_idx<<std::endl;
-            for(auto elem:ExonTree[Exon_idx].getNeighbors())
-                std::cout<<elem.first<<"/"<<elem.second<<" ";
-            std::cout<<std::endl;
 
-        }
+
+        //Choose different exons as beginning
+        std::vector<bool>                  ExonsCoveredByIsoform(RG.ExonBoundary.size(),false);
+        std::vector<std::vector<uint32_t>> Total_Paths;
+        uint32_t        NumofFoundPaths       {0};
+
         /*
+        for(auto i=0;i<ExonTree.size();i++)
+        {
+            std::cout<<"Exon "<<i<<std::endl;
+            for(auto elem:ExonTree[i].getNeighbors())
+                std::cout<<elem.first<<" ";
+            std::cout<<'\n';
+        }*/
 
+
+        //Choose important exons and perform traversal
         while(true)
         {
             bool ReachedMax {false};
-            TwoDimVec<bool> CurrentPaths;
+            std::vector<uint32_t> Selected_Exon;
 
-            //Choose important exons as start.
+            //Choose important exons as start using current parameters exon_min_frac,junc_exp_frac,
             for(auto exon_index=0;exon_index<RG.ExonBoundary.size();exon_index++)
             {
-                bool Is_selected {((!(IntronRetention_Left[exon_index]||IntronRetention_Right[exon_index]) && Explv[exon_index]>=MaxExonExplv*exon_min_frac )||
-                                   ( (IntronRetention_Left[exon_index]||IntronRetention_Right[exon_index]) && Explv[exon_index]>=MaxExonExplv*junc_exp_frac )||
-                                   ( JuncExplv[exon_index] >= MaxJuncExonExplv*junc_exp_frac))
-                                   && RG.ExonStats[exon_index][2] <= 0.7
+                bool Is_selected {((!(IntronRetention_Left[exon_index]||IntronRetention_Right[exon_index]) && Explv[exon_index]>=MaxExonExplv*exon_min_frac) // Is not intron retention
+                                    ||((IntronRetention_Left[exon_index]||IntronRetention_Right[exon_index]) && Explv[exon_index]>=MaxExonExplv*intron_retention_frac) // Is intron retention
+                                    ||(JuncExplv[exon_index] >= MaxJuncExonExplv*junc_exp_frac)
+                                   ) && RG.ExonStats[exon_index][2] <= 0.7
                                  };
                 
                 if(Is_selected)
-                    Selected_Exon.emplace_back(exon_index); // Should start from here
+                    Selected_Exon.push_back(exon_index); // Should start from here
             }
 
-#ifdef DEBUG
-            std::cout<<"Selected Exons"<<std::endl;
-            for(auto exon:Selected_Exon)
-                std::cout<<exon<<" ";
-            std::cout<<std::endl;
-#endif
+            std::cout<<"SelectedExons"<<std::endl;
+            IsoLasso::utils::print1Dvector(Selected_Exon);
+            std::cout<<"ExonsCoveredByIsoform"<<std::endl;
+            IsoLasso::utils::print1Dvector(ExonsCoveredByIsoform);
 
-            //Choose different exons as beginning
-            while(true)
-            {         
-                TwoDimVec<bool>   StackIsofs;
-                std::vector<bool> Path(NumExons,false);
-                bool              END_FLAG {true};
-                uint32_t          IsfStart,CurrentSubInst{0};    
-                
-                //Select unvisited exons
-                for(auto exon:Selected_Exon)
-                {
-                    if(!IsVisited[exon])
-                    {
-                        IsfStart = exon;
-                        END_FLAG = false;
-                        break;
-                    }
-                }
-
-                //All Exons were visited
-                if(END_FLAG)
-                    break;
-
-                GetConnectingPaths(RG.ReadSupportMatrix,IsfStart,Path,Explv,StackIsofs,intron_retention_frac);
-                
-                std::cout<<"Path"<<std::endl;
-                for(auto exon:Path) std::cout<<exon<<" ";
-                std::cout<<std::endl;
-
-                std::cout<<"StackIsofs"<<std::endl;
-                for(auto Isf:StackIsofs) 
-                {
-                    for(auto exon:Isf)
-                        std::cout<<exon<<" ";
-                    std::cout<<std::endl;
-                }
-                if(Candidate_Isfs.size()+StackIsofs.size()>MAX_ISOFORM_NUM)//Exceed maximum Isoform number
-                {
-                    ReachedMax = true;
-                    break;
-                }
-
-                auto Overlap {false};
-
-                for(auto ExonIndex=0;ExonIndex<NumExons;ExonIndex++)//All exons
-                {
-                    if(Path[ExonIndex]&&IsVisited[ExonIndex])
-                    {
-                        Overlap = true;
-                        break;
-                    }
-                }
-                
-                if(!Overlap)
-                {
-                    CurrentSubInst=CurrentPaths.size();
-                    CurrentPaths.emplace_back(Path);
-                }
-                else //Overlapping
-                {
-                    for(auto PathIndex=0;PathIndex<CurrentPaths.size();PathIndex++)//Existing Paths
-                    {
-                        for(auto ExonIndex=0;ExonIndex<Path.size();ExonIndex++)//All exons
-                        {
-                            if(Path[ExonIndex]&&CurrentPaths[PathIndex][ExonIndex])
-                            {
-                                CurrentSubInst = PathIndex;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // All StackIsofs found for current IsfStart were saved
-                // to Candidate_Isfs 
-                std::cout<<"StackIsofs"<<StackIsofs.size()<<std::endl;
-                std::vector<uint32_t> SubInstIndex(StackIsofs.size(),CurrentSubInst);
-
-                std::move(SubInstIndex.begin(),SubInstIndex.end(),std::back_inserter(SubInsts));
-                std::move(StackIsofs.begin(),StackIsofs.end(),std::back_inserter(Candidate_Isfs));
-                
-                for(auto ExonIndex=0;ExonIndex<NumExons;ExonIndex++)
-                    IsVisited[ExonIndex] = IsVisited[ExonIndex] || Path[ExonIndex];             
-            }
-            if(ReachedMax)
+            bool FoundPath = false;
+            for(auto Start:Selected_Exon) 
             {
-                exon_min_frac         = (exon_min_frac>1)?0.99:exon_min_frac*THERSHOLD_GROWTH;
-                junc_exp_frac         = (junc_exp_frac>1)?0.99:junc_exp_frac*THERSHOLD_GROWTH;
-                intron_retention_frac = (intron_retention_frac>1)?0.99:intron_retention_frac*THERSHOLD_GROWTH;
-                Selected_Exon.clear();
-                Selected_Exon.shrink_to_fit();
-                Candidate_Isfs.clear();
-                Candidate_Isfs.shrink_to_fit();
-                SubInsts.clear();
-                SubInsts.shrink_to_fit();
-                continue;
+                
+                if(ExonsCoveredByIsoform[Start])
+                    continue;
+                else
+                    FoundPath = true;
+                NumofFoundPaths += TreeTraversal(Total_Paths,ExonTree,RG.ReadSupportMatrix,Explv,JuncExplv,Start,exon_min_frac,junc_exp_frac,intron_retention_frac,ExonsCoveredByIsoform);
+                if(NumofFoundPaths>=MAX_ISOFORM_NUM)// Too many candidates
+                {
+                    Total_Paths.clear();
+                    Total_Paths.shrink_to_fit();
+                    break;
+                }
+                //IsoLasso::utils::print2Dvector(Total_Paths);
             }
-            else
+            //Restrict Path 
+            if(NumofFoundPaths>=MAX_ISOFORM_NUM)
+            {
+                NumofFoundPaths        = 0;
+                exon_min_frac         *= THERSHOLD_GROWTH;
+                intron_retention_frac *= THERSHOLD_GROWTH;
+
+                if(intron_retention_frac<exon_min_frac)
+                    intron_retention_frac = exon_min_frac;
+                if(intron_retention_frac>1)
+                    intron_retention_frac = 0.99;
+                
+                junc_exp_frac         *= THERSHOLD_GROWTH;
+                if(junc_exp_frac>1)
+                    junc_exp_frac      = 0.99;
+            }
+            if(!FoundPath)
                 break;
-        }
-        if(Candidate_Isfs.size()!=0)
+         }
+        
+        std::cout<<"Found Paths:"<<std::endl;
+        IsoLasso::utils::print2Dvector(Total_Paths);
+
+        /*
+        if(Total_Paths.size()!=0)
             FilterImpossibleCandidates(Candidate_Isfs,RG);
         */
         return;
+   
+    }
+
+    uint32_t
+    TreeTraversal(std::vector<std::vector<uint32_t>>& TotalPaths,
+                  std::vector<IsoLasso::Algorithm::ExonNode>& Tree,
+                  const std::vector<std::vector<uint32_t>>& ReadSupportMatrix,
+                  const std::vector<double>& Explv,
+                  const std::vector<double>& JuncExplv,
+                  const uint32_t StartExon,
+                  const double exon_min_frac,
+                  const double junc_exp_frac ,
+                  const double intron_retention_frac,
+                  std::vector<bool>& ExonsCoveredByIsoform)
+    {
+        std::stack<std::pair<uint32_t,uint32_t>> ExonStack; // pair of {Exonindex,Depth}
+        std::vector<uint32_t> CurrentPath;
+        std::vector<bool> IsVisited(Tree.size(),false);
+        uint32_t NumofPaths {0};
+
+        ExonStack.emplace(StartExon,0);
+
+        while(!ExonStack.empty())
+        {
+            //Get Node from top
+            auto [CurrentExon,CurrentDepth] = ExonStack.top();
+            ExonStack.pop();
+            ExonsCoveredByIsoform[CurrentExon] = true;
+
+            if(IsVisited[CurrentExon])
+                continue;
+
+
+            // Add new exon 
+            CurrentPath.push_back(CurrentExon);
+            IsVisited[CurrentExon] = true;            
+
+            //Add neighbors to stack
+
+            auto neighbors = Tree[CurrentExon].getNeighbors();
+
+            auto ReachedEnd {true};
+
+            if(!neighbors.empty())
+            {
+                auto MaxNeighborExplv  = std::ranges::max(neighbors| std::ranges::views::transform([](auto i){ return i.first; })
+                                                                | std::ranges::views::transform([&Explv](auto i)->const auto&{ return Explv[i]; }));
+                auto MaxNeighborJuncLv = neighbors.back().second;
+
+                for(auto neighbor:neighbors)
+                {            
+                    if((Explv[neighbor.first]>=MaxNeighborExplv*exon_min_frac)&&
+                    (ReadSupportMatrix[CurrentExon][neighbor.first]>=MaxNeighborJuncLv*junc_exp_frac)&&
+                    !IsVisited[neighbor.first])
+                    {
+                        if(neighbor.first==(CurrentExon+1))//intron retention test
+                        {
+                            if(Explv[neighbor.first] < MaxNeighborExplv*intron_retention_frac)
+                                continue;
+                        }
+                        ExonStack.emplace(neighbor.first,CurrentDepth+1);
+                        ReachedEnd = false;
+                    }
+                    else    
+                        continue;
+                }
+            }
+            if(ReachedEnd) // end of path
+            {
+                TotalPaths.push_back(CurrentPath);
+                for(auto Exon:CurrentPath)
+                    ExonsCoveredByIsoform[Exon] = true;
+                NumofPaths++;
+                if(NumofPaths>=MAXPATH_PERNODE)
+                {
+                    std::cout<<"Warning: reached maximum path "<<MAXPATH_PERNODE <<" per node!"<<std::endl;
+                    break;
+                }
+                else//Pop from stack
+                {
+                    if(ExonStack.empty())
+                        break;
+
+                    auto Pop_Count {CurrentDepth - ExonStack.top().second + 1};
+
+                    while(Pop_Count--)
+                    {
+                        IsVisited[CurrentPath.back()] = false;
+                        CurrentPath.pop_back();
+                    }
+
+                }
+            }
+        }
+        return NumofPaths;
     }
 
     /*
@@ -219,9 +280,6 @@ namespace IsoLasso::Algorithm
              double& MaxJuncExonExplv)
     {
 
-        LeftExplv.assign(RG.ExonBoundary.size(),0);
-        RightExplv.assign(RG.ExonBoundary.size(),0);
-
         for(auto row=0;row<RG.ExonBoundary.size();++row)
         {
             for(auto col=row+1;col<RG.ExonBoundary.size();++col)
@@ -240,7 +298,7 @@ namespace IsoLasso::Algorithm
 
         //Calculate each exon's expression level
         utils::GetExonExplv(RG,Explv);
-        MaxExonExplv = *std::max_element(Explv.begin(),Explv.end());
+        MaxExonExplv = std::ranges::max(Explv);
 
         //Junction
         for(auto exon_index=0;exon_index<RG.ExonBoundary.size();exon_index++)
@@ -249,7 +307,7 @@ namespace IsoLasso::Algorithm
             RightExplv[exon_index] /= (RG.ReadLen*EXON_READLEN_FRAC);
             JuncExplv.emplace_back((LeftExplv[exon_index]+RightExplv[exon_index])/2);
         }
-        MaxJuncExonExplv = *std::max_element(JuncExplv.begin(),JuncExplv.end());
+        MaxJuncExonExplv = std::ranges::max(JuncExplv);
 
         //IntronRetention
         for(auto exon_index=1;exon_index<RG.ExonBoundary.size()-1;exon_index++)
@@ -388,6 +446,12 @@ namespace IsoLasso::Algorithm
         }
         return;
     }
+
+    /*
+     * 
+     *
+     */
+
     void
     FilterImpossibleCandidates(TwoDimVec<bool>& Candidaite_Isfs,format::ReadGroup& RG)
     {
@@ -399,7 +463,11 @@ namespace IsoLasso::Algorithm
 
         for(auto Typeindex=0;Typeindex<RG.SGTypes.size();Typeindex++)
         {
-            if(std::accumulate(RG.SGTypes[Typeindex].begin(),RG.SGTypes[Typeindex].end(),0,[](auto i1,auto i2){return i1+(i2==true);})>1)
+            if(std::accumulate(RG.SGTypes[Typeindex].begin(),
+                               RG.SGTypes[Typeindex].end(),
+                               0,
+                               [](auto i1,auto i2){return i1+(i2==true);})
+                               >1)//With more than one exon
             {
                 SGJuncType.emplace_back(RG.SGTypes[Typeindex]);
                 SGJuncCount.emplace_back(RG.TypeCount[Typeindex]);
@@ -408,7 +476,11 @@ namespace IsoLasso::Algorithm
 
         for(auto Candidateindex=0;Candidateindex<NumCandidates;Candidateindex++)
         {
-            if(std::accumulate(Candidaite_Isfs[Candidateindex].begin(),Candidaite_Isfs[Candidateindex].end(),0,[](auto i1,auto i2){return i1+(i2==true);})==1)
+            if(std::accumulate(Candidaite_Isfs[Candidateindex].begin(),
+                               Candidaite_Isfs[Candidateindex].end(),
+                               0,
+                               [](auto i1,auto i2){return i1+(i2==true);})
+                               ==1)//Single exon
                 continue;
             std::vector<bool> IsCovered(NumExons,false);
             bool InvalidFlag {false};

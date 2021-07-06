@@ -5,7 +5,6 @@
 #include <SAM_module/SAMrecord.hpp>
 #include <EM_module/PredExpLevel.hpp>
 
-
 std::ofstream IsoLasso::utils::RG_STATS_FS;
 
 
@@ -262,7 +261,7 @@ namespace IsoLasso::format
         auto Bound_iter {Boundary.begin()},next_Bound_iter {std::next(Bound_iter)};
         while(next_Bound_iter!=Boundary.end())
         {
-            ExonBoundary.emplace_back(range_type(Bound_iter->first,next_Bound_iter->first-1));
+            ExonBoundary.emplace_back(Bound_iter->first,next_Bound_iter->first-1);
             Bound_iter++;
             next_Bound_iter++;
         }
@@ -474,20 +473,25 @@ namespace IsoLasso::format
     void
     ReadGroup::RemoveWeakExons(const double MIN_CVG_FRAC)
     {
-        std::vector<bool> Include_InJunction(ExonBoundary.size(),0);
+        std::vector<bool> IncludedInJunction(ExonBoundary.size(),false);
 
-        for(auto Type:SGTypes)
+        
+        for(auto TypeIndex=0;TypeIndex<SGTypes.size();TypeIndex++)
         {
-            if(Type.size()>1)
+            if(SGTypes[TypeIndex].size()>1)
             {
-                if(Type[0]!=Type[1]-1)
-                    Include_InJunction[Type[0]] = true;
-                if(Type.back()!=*std::prev(Type.end())+1)
-                    Include_InJunction[Type.back()] = true;
-                for(auto exon_index=1;exon_index<Type.size()-1;exon_index++)
-                    Include_InJunction[Type[exon_index]] = true;
+                if(SGTypes[TypeIndex][0]!=SGTypes[TypeIndex][1]-1)
+                    IncludedInJunction[SGTypes[TypeIndex][0]] = true;
+                if(SGTypes[TypeIndex].back()!=SGTypes[TypeIndex][SGTypes[TypeIndex].size()-2]+1)
+                    IncludedInJunction[SGTypes[TypeIndex].back()] = true;
+                if(SGTypes[TypeIndex].size()>2)
+                {
+                    for(auto exon_index=1;exon_index<SGTypes[TypeIndex].size()-1;exon_index++)
+                        IncludedInJunction[SGTypes[TypeIndex][exon_index]] = true;
+                }
             }
         }
+
 
         for(auto exon_index=0;exon_index<ExonBoundary.size();exon_index++)
         {
@@ -511,7 +515,7 @@ namespace IsoLasso::format
             }
 
             if(CvgStats[ExonBoundary[exon_index].first][3]<=Neighbor_Cvg*MIN_CVG_FRAC 
-               && !Include_InJunction[exon_index])
+               && !IncludedInJunction[exon_index])
                 ValidExons[exon_index] = false; 
         }
 
@@ -789,6 +793,8 @@ namespace IsoLasso::utils
             SubRG.CalculateType();
             //Remove Exons with too small coverage and not included in any junction type
             SubRG.RemoveWeakExons(MIN_CVG_FRAC);
+
+
             //Remove Types with Invalid exons and those reads with invalid types and recalculate coverage statistics
             SubRG.CalculateValidExons();
 
