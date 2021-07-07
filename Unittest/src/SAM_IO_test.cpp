@@ -2,12 +2,15 @@
 #include "SAM_module/SAMprocess.hpp"
 #include "SAM_module/SAMrecord.hpp"
 #include "SAM_module/ReadGroup.hpp"
+#include "EM_module/PredExpLevel.hpp"
+#include "EM_module/EMalgorithm.hpp"
 #include <string>
 #include <sstream>
 #include <fstream>
 
 using namespace IsoLasso::format;
 using namespace IsoLasso::utils;
+using namespace IsoLasso::Algorithm;
 
 TEST(Gtest, Gtest_initialization) 
 {
@@ -251,7 +254,7 @@ TEST(SAM_utils_test, Paired_end_test){
 
         if(Record.ValidBit)
         {
-            RG.AddRecord(Record,CurrentRange);
+            RG.AddRecord(Record);
         }
     }
 

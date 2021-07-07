@@ -1,6 +1,7 @@
 #include<SAM_module/ReadGroup.hpp>
 #include<EM_module/PredExpLevel.hpp>
 #include<EM_module/TreeNodes.hpp>
+#include<EM_module/EMalgorithm.hpp>
 #include<utils/Commontype.hpp>
 #include<numeric>
 #include<algorithm>
@@ -19,18 +20,23 @@ namespace IsoLasso::Algorithm
         utils::Check_ReadGroup(RG);
 #endif
 
-        TwoDimVec<bool>       Candidate_Isfs;
+        TwoDimVec<uint32_t>   Candidate_Isfs;
         std::vector<uint32_t> SubInsts;
         bool                  Reached_Max {true};
 
         //Configs for prediction
         GenerateCandidateIsoform(RG,Candidate_Isfs,SubInsts);
 
+        //Calculate expression level with E-M algorithm
+        EM_Process(RG,Candidate_Isfs,SubInsts);
+
         return;
     }
 
     void
-    GenerateCandidateIsoform(format::ReadGroup& RG,TwoDimVec<bool>& Candidate_Isfs,std::vector<uint32_t>& SubInsts)
+    GenerateCandidateIsoform(IsoLasso::format::ReadGroup& RG,
+                             TwoDimVec<uint32_t>& Candidate_Isfs,
+                             std::vector<uint32_t>& SubInsts)
     {
         auto NumExons {RG.ExonBoundary.size()};
         auto MaxExonExplv {0.0},MaxJuncExonExplv {0.0};
@@ -82,7 +88,6 @@ namespace IsoLasso::Algorithm
 
         //Choose different exons as beginning
         std::vector<bool>                  ExonsCoveredByIsoform(RG.ExonBoundary.size(),false);
-        std::vector<std::vector<uint32_t>> Total_Paths;
         uint32_t        NumofFoundPaths       {0};
 
         /*
@@ -114,11 +119,12 @@ namespace IsoLasso::Algorithm
                     Selected_Exon.push_back(exon_index); // Should start from here
             }
 
+#ifdef DEBUG
             std::cout<<"SelectedExons"<<std::endl;
             IsoLasso::utils::print1Dvector(Selected_Exon);
             std::cout<<"ExonsCoveredByIsoform"<<std::endl;
             IsoLasso::utils::print1Dvector(ExonsCoveredByIsoform);
-
+#endif
             bool FoundPath = false;
             for(auto Start:Selected_Exon) 
             {
@@ -127,11 +133,11 @@ namespace IsoLasso::Algorithm
                     continue;
                 else
                     FoundPath = true;
-                NumofFoundPaths += TreeTraversal(Total_Paths,ExonTree,RG.ReadSupportMatrix,Explv,JuncExplv,Start,exon_min_frac,junc_exp_frac,intron_retention_frac,ExonsCoveredByIsoform);
+                NumofFoundPaths += TreeTraversal(Candidate_Isfs,ExonTree,RG.ReadSupportMatrix,Explv,JuncExplv,Start,exon_min_frac,junc_exp_frac,intron_retention_frac,ExonsCoveredByIsoform);
                 if(NumofFoundPaths>=MAX_ISOFORM_NUM)// Too many candidates
                 {
-                    Total_Paths.clear();
-                    Total_Paths.shrink_to_fit();
+                    Candidate_Isfs.clear();
+                    Candidate_Isfs.shrink_to_fit();
                     break;
                 }
                 //IsoLasso::utils::print2Dvector(Total_Paths);
@@ -156,13 +162,17 @@ namespace IsoLasso::Algorithm
                 break;
          }
         
+#ifdef DEBUG
         std::cout<<"Found Paths:"<<std::endl;
-        IsoLasso::utils::print2Dvector(Total_Paths);
+        IsoLasso::utils::print2Dvector(Candidate_Isfs);
+#endif
 
         /*
         if(Total_Paths.size()!=0)
             FilterImpossibleCandidates(Candidate_Isfs,RG);
         */
+
+
         return;
    
     }
@@ -170,7 +180,7 @@ namespace IsoLasso::Algorithm
     uint32_t
     TreeTraversal(std::vector<std::vector<uint32_t>>& TotalPaths,
                   std::vector<IsoLasso::Algorithm::ExonNode>& Tree,
-                  const std::vector<std::vector<uint32_t>>& ReadSupportMatrix,
+                  const TwoDimVec<uint32_t>& ReadSupportMatrix,
                   const std::vector<double>& Explv,
                   const std::vector<double>& JuncExplv,
                   const uint32_t StartExon,
