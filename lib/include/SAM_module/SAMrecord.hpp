@@ -95,7 +95,7 @@ namespace IsoLasso::utils
     ParseCIGAR(IsoLasso::format::Sam_record&);
 
     inline uint32_t
-    GetEfficientLen(IsoLasso::format::Sam_record& Record)
+    GetEfficientLen(const IsoLasso::format::Sam_record& Record)
     {
         uint32_t EfficientLen {0};
         for(auto i =0;i<Record.SegmentStart.size();i++) 

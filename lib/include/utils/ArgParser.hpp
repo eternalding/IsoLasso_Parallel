@@ -13,7 +13,7 @@ namespace IsoLasso::format
         std::string SAMFILE              ;
 
         //Optional fields
-        std::string OUTPUT_PREFIX           ; // Specify the prefix of all generated files. 
+        std::string OUTPUT_PREFIX        ; // Specify the prefix of all generated files. 
         
     };
     extern IsoLasso::format::Args arguments;

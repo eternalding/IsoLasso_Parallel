@@ -8,36 +8,36 @@ namespace IsoLasso::format
 {
     class RangeSet
     {
-
-            std::map<u_int32_t,u_int32_t>   coverage;
-            bool                            Is_merged {false};
-
         public:
 
-            u_int32_t
-            MinDistance(const std::vector<u_int32_t>& start,const std::vector<u_int32_t>& end);
+            std::map<uint32_t,uint32_t>   coverage;
+            bool                            Is_merged {false};
 
-            u_int32_t
+
+            uint32_t
+            MinDistance(const std::vector<uint32_t>& start,const std::vector<uint32_t>& end);
+
+            uint32_t
             MinDistance(const range_type& exon_range);
 
-            u_int32_t
+            uint32_t
             MinDistance(RangeSet& SecondRange);
 
-            inline u_int32_t
-            MinDistance(const u_int32_t& pos)
+            inline uint32_t
+            MinDistance(const uint32_t& pos)
             {
-                std::map<u_int32_t,u_int32_t>::iterator cvg_iter {coverage.upper_bound(pos)};
+                std::map<uint32_t,uint32_t>::iterator cvg_iter {coverage.upper_bound(pos)};
                 if(cvg_iter==coverage.end())
                     return abs(pos+1-(coverage.rbegin()->first));
                 else if (cvg_iter->second==0)
                     return 0;
                 else
                 {
-                    u_int32_t DistFromNext (abs(pos-cvg_iter->first));
+                    uint32_t DistFromNext (abs(pos-cvg_iter->first));
                     if(cvg_iter!=coverage.begin())
                     {
                         cvg_iter--;
-                        u_int32_t DistFromPrev (abs(pos+1-cvg_iter->first));
+                        uint32_t DistFromPrev (abs(pos+1-cvg_iter->first));
                         return DistFromNext>DistFromPrev?DistFromPrev:DistFromNext;
                     }
                     else   
@@ -46,15 +46,15 @@ namespace IsoLasso::format
             }
 
             void
-            Add(const std::vector<u_int32_t> start,const std::vector<u_int32_t> end);
+            Add(const std::vector<uint32_t> start,const std::vector<uint32_t> end);
 
             void
-            UpdateCvg(const u_int32_t exon_start, const u_int32_t exon_end ,bool Is_merge);
+            UpdateCvg(const uint32_t exon_start, const uint32_t exon_end ,bool Is_merge);
 
             inline bool 
-            IsOverlap(const u_int32_t& pos)
+            IsOverlap(const uint32_t& pos)
             {
-                std::map<u_int32_t,u_int32_t>::iterator cvg_iter {coverage.upper_bound(pos)};
+                std::map<uint32_t,uint32_t>::iterator cvg_iter {coverage.upper_bound(pos)};
                 if (cvg_iter==coverage.end())
                     return false;
                 else if(cvg_iter->second==0)
@@ -82,13 +82,13 @@ namespace IsoLasso::format
                 return;
             }
 
-            inline std::tuple<std::vector<u_int32_t>,std::vector<u_int32_t>>
+            inline std::tuple<std::vector<uint32_t>,std::vector<uint32_t>>
             toRange()
             {
-                std::vector<u_int32_t> Start;
-                std::vector<u_int32_t> End;
+                std::vector<uint32_t> Start;
+                std::vector<uint32_t> End;
                 
-                u_int32_t prev {0};
+                uint32_t prev {0};
                 for(auto cvg_iter=coverage.begin();cvg_iter!=coverage.end();cvg_iter++)
                 {
                     if(cvg_iter->second>0)
