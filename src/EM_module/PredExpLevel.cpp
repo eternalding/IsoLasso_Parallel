@@ -54,7 +54,6 @@ namespace IsoLasso::Algorithm
         std::vector<int32_t>  Indegree(RG.ExonBoundary.size(),0),
                               Outdegree(RG.ExonBoundary.size(),0);
 
-                              
         //Calculate Expression levels for each exon.
         GetExpLv(RG,Explv,JuncExplv,LeftExplv,
                  RightExplv,Indegree,Outdegree,
@@ -126,7 +125,7 @@ namespace IsoLasso::Algorithm
             IsoLasso::utils::print1Dvector(ExonsCoveredByIsoform);
 #endif
             bool FoundPath = false;
-            for(auto Start:Selected_Exon) 
+            for(const auto Start:Selected_Exon) 
             {
                 
                 if(ExonsCoveredByIsoform[Start])
@@ -162,11 +161,6 @@ namespace IsoLasso::Algorithm
                 break;
          }
         
-#ifdef DEBUG
-        std::cout<<"Found Paths:"<<std::endl;
-        IsoLasso::utils::print2Dvector(Candidate_Isfs);
-#endif
-
         /*
         if(Total_Paths.size()!=0)
             FilterImpossibleCandidates(Candidate_Isfs,RG);
@@ -206,7 +200,6 @@ namespace IsoLasso::Algorithm
             if(IsVisited[CurrentExon])
                 continue;
 
-
             // Add new exon 
             CurrentPath.push_back(CurrentExon);
             IsVisited[CurrentExon] = true;            
@@ -223,7 +216,7 @@ namespace IsoLasso::Algorithm
                                                                 | std::ranges::views::transform([&Explv](auto i)->const auto&{ return Explv[i]; }));
                 auto MaxNeighborJuncLv = neighbors.back().second;
 
-                for(auto neighbor:neighbors)
+                for(const auto& neighbor:neighbors)
                 {            
                     if((Explv[neighbor.first]>=MaxNeighborExplv*exon_min_frac)&&
                     (ReadSupportMatrix[CurrentExon][neighbor.first]>=MaxNeighborJuncLv*junc_exp_frac)&&
@@ -244,7 +237,7 @@ namespace IsoLasso::Algorithm
             if(ReachedEnd) // end of path
             {
                 TotalPaths.push_back(CurrentPath);
-                for(auto Exon:CurrentPath)
+                for(const auto Exon:CurrentPath)
                     ExonsCoveredByIsoform[Exon] = true;
                 NumofPaths++;
                 if(NumofPaths>=MAXPATH_PERNODE)
@@ -381,7 +374,7 @@ namespace IsoLasso::Algorithm
                     double MaxJuncExpLv {0.0}, MaxExpLv {0.0};
                     bool   HasCandidate {false};
                     std::vector<bool> ValidConnectedExons(ConnectedExons.size(),true);
-                    for(auto index:ConnectedExons)
+                    for(const auto index:ConnectedExons)
                     {
                         if(Explv[index]>MaxExpLv)
                             MaxExpLv = Explv[index];
@@ -423,7 +416,7 @@ namespace IsoLasso::Algorithm
                     
                     ReachedEnd = ConnectedExons.empty();
 
-                    for(auto index:ConnectedExons)//Put all valid connected exons into stack
+                    for(const auto index:ConnectedExons)//Put all valid connected exons into stack
                     {
                         Stack.emplace_back(index);
                         Stack_Prev.emplace_back(Prev_Stackpt);
@@ -495,7 +488,7 @@ namespace IsoLasso::Algorithm
             std::vector<bool> IsCovered(NumExons,false);
             bool InvalidFlag {false};
 
-            for(auto Type:SGJuncType)
+            for(const auto& Type:SGJuncType)
             {
                 if(!utils::CheckCompatible(Candidaite_Isfs[Candidateindex],Type))
                     continue;

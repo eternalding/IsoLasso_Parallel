@@ -5,9 +5,6 @@
 #include <SAM_module/SAMrecord.hpp>
 #include <EM_module/PredExpLevel.hpp>
 
-std::ofstream IsoLasso::utils::RG_STATS_FS;
-
-
 namespace IsoLasso::format
 {
     void
@@ -34,8 +31,8 @@ namespace IsoLasso::format
     void
     ReadGroup::RemoveLongSpanReads(const uint32_t& MAX_EXON_SPAN,const uint32_t& MAX_JUNCTION_COVERAGE)
     {
-        std::map<u_int32_t,u_int32_t> Coverage;
-        for(auto read:ReadStart) 
+        std::map<uint32_t,uint32_t> Coverage;
+        for(const auto& read:ReadStart) 
             Coverage[read[0]]++;
         for(auto read_idx = 0;read_idx<ReadStart.size();read_idx++)
         {
@@ -43,8 +40,8 @@ namespace IsoLasso::format
             {
                 for(auto seg_idx=1;seg_idx<ReadStart[read_idx].size();seg_idx++)//Segments
                 {
-                    u_int32_t cur_start{ReadStart[read_idx][seg_idx]}, prev_end {ReadEnd[read_idx][seg_idx-1]}; 
-                    u_int32_t span {cur_start-prev_end};// Spans for two segments
+                    uint32_t cur_start{ReadStart[read_idx][seg_idx]}, prev_end {ReadEnd[read_idx][seg_idx-1]}; 
+                    uint32_t span {cur_start-prev_end};// Spans for two segments
                     if(span<MAX_EXON_SPAN)
                         continue;
                     else if(utils::ExceedThreshold(Coverage,prev_end,cur_start,MAX_JUNCTION_COVERAGE))
@@ -58,8 +55,8 @@ namespace IsoLasso::format
             }
             if(PairendTable[read_idx]!=-1&&read_idx<PairendTable[read_idx])
             {
-                u_int32_t left_end_back {ReadEnd[read_idx].back()},right_end_front {ReadStart[PairendTable[read_idx]].front()};
-                u_int32_t pair_span {right_end_front-left_end_back};
+                uint32_t left_end_back {ReadEnd[read_idx].back()},right_end_front {ReadStart[PairendTable[read_idx]].front()};
+                uint32_t pair_span {right_end_front-left_end_back};
                 if(pair_span<MAX_EXON_SPAN)
                     continue;
                 else if(utils::ExceedThreshold(Coverage,left_end_back,right_end_front,MAX_JUNCTION_COVERAGE))
@@ -84,7 +81,7 @@ namespace IsoLasso::format
                 {
                     if(PairendTable[read_index]==-1) // Single-End
                     {
-                        u_int32_t current_minDist {RangeSets[range_index].MinDistance(ReadStart[read_index],ReadEnd[read_index])};
+                        uint32_t current_minDist {RangeSets[range_index].MinDistance(ReadStart[read_index],ReadEnd[read_index])};
                                                 
                         if(current_minDist<= MIN_GAP_SPAN)//Redistribute reads
                         {
@@ -190,7 +187,7 @@ namespace IsoLasso::format
                 RG_iter->CurrentRange=RG_iter->getRange();
                 RG_iter->SubRG_index = Sub_index;
                 RG_iter->ReadLen = std::max_element(ReadLen_Count.begin(), ReadLen_Count.end(),
-                                                    [](const std::pair<u_int32_t, u_int32_t>& p1, const std::pair<u_int32_t, u_int32_t>& p2) {
+                                                    [](const std::pair<uint32_t, uint32_t>& p1, const std::pair<uint32_t, uint32_t>& p2) {
                                                     return p1.second < p2.second; })->first;
                 Sub_index++;
                 RG_iter++;
@@ -248,7 +245,7 @@ namespace IsoLasso::format
         // Update Coverage Cutpoint to boundary
         // Do not insert boundaries if the maximum coverage is too low, or if the gap is too short
         // Check adjacent ranges, if they're too close, merge them
-        for(auto cvg_range:Cutpoint)
+        for(const auto& cvg_range:Cutpoint)
         {
             if(Boundary.count(cvg_range.first)==0 && utils::ShortestDist(Boundary,cvg_range.first)>ReadLen)
                 Boundary[cvg_range.first]++;
@@ -303,7 +300,7 @@ namespace IsoLasso::format
     }
     void 
     ReadGroup::GetCvgCutPoint(const std::map<uint32_t,int32_t>&coverage,std::vector<range_type>& Cutpoint,
-                              const u_int32_t MIN_EXON_COV,const u_int32_t MIN_GAP_SPAN)
+                              const uint32_t MIN_EXON_COV,const uint32_t MIN_GAP_SPAN)
     {
         std::vector<range_type> CvgRanges;
         bool NewRange {false};
@@ -328,7 +325,7 @@ namespace IsoLasso::format
         }
 
         // Merge 
-        for(auto Cur_range:CvgRanges)
+        for(const auto& Cur_range:CvgRanges)
         {
             if(Cutpoint.size()>0 && Cur_range.first-Cutpoint.back().second<=MIN_GAP_SPAN)//Merge
                 Cutpoint.back().second = Cur_range.second;
@@ -572,7 +569,7 @@ namespace IsoLasso::format
         CvgStats.clear();
         std::map<uint32_t,uint32_t> Boundary;
 
-        for(auto bound:ExonBoundary)
+        for(const auto& bound:ExonBoundary)
         {
             Boundary[bound.first]++;
             Boundary[bound.second+1]++;
@@ -582,12 +579,15 @@ namespace IsoLasso::format
     }
 
     void
-    ReadGroup::WriteStatsToFile(std::ofstream& ofs)
+    ReadGroup::WriteStatsToFile(std::ofstream& ofs,
+                                const TwoDimVec<uint32_t>& CandidateIsf,
+                                const std::vector<double>& ExpLv)
     {
         ofs << "=================== BEGIN OF ReadGroup "<< RG_index+1<<"-"<<SubRG_index+1<<" ==================="<<std::endl;
-        ofs << "Boundary:" << ChrName<<":["<<CurrentRange.first<<"-"<<CurrentRange.second<<"], Orientation:"<<Orientation<<std::endl;       
-        ofs << "ReadLen:"  << ReadLen<<std::endl;
-        ofs << "Total valid reads:"<<validSize()<<std::endl;
+        ofs << "[Boundary]\n" << ChrName<<":("<<CurrentRange.first<<"-"<<CurrentRange.second<<"), Orientation:"<<Orientation<<std::endl;       
+        ofs << "[ReadLen]\n"  << ReadLen<<std::endl;
+        ofs << "[Total valid reads]\n"<<validSize()<<std::endl;
+        ofs << "[Exon Information]\n";
         ofs << std::left << std::setw(15) << "Exon_Index "
                          << std::setw(15) << "Exon_Start " 
                          << std::setw(15) << "Exon_End " 
@@ -606,19 +606,24 @@ namespace IsoLasso::format
                                << std::setw(15) << ExonCoverage[exon_index]<<" "<< std::setw(15);
 
                 auto Cvg_iter {CvgStats.find(ExonBoundary[exon_index].first)};
-                for(auto stats:Cvg_iter->second)
+                for(const auto& stats:Cvg_iter->second)
                     ofs<<stats<<",";
                 ofs<<std::endl;
             
             }
         }
 
-        ofs<<"SGTypes:"<<std::accumulate(ValidType.begin(),ValidType.end(),0,[](uint32_t a,bool b){return a+(b==true);})<<std::endl;
+        ofs <<"[SGTypes]"<< std::endl;
+        ofs << std::left << std::setw(15) << "Index "
+                         << std::setw(15) << "Type " 
+                         << std::setw(15) << "Direction " 
+                         << std::endl;
+
         for(auto TypeIndex=0;TypeIndex<SGTypes.size();TypeIndex++)
         {
             if(!ValidType[TypeIndex])
                 continue;
-
+            ofs<<TypeIndex<<"\t";
             auto Exon_iter {SGTypes[TypeIndex].begin()};
 
             for(auto exon_index=0;exon_index<ExonBoundary.size();exon_index++)
@@ -626,17 +631,17 @@ namespace IsoLasso::format
                 if(ValidExons[exon_index])
                 {
                     if(Exon_iter==SGTypes[TypeIndex].end())
-                        ofs<<"0 ";
+                        ofs<<"0";
                     else if(*Exon_iter==exon_index)
                     {
-                        ofs<<"1 ";
+                        ofs<<"1";
                         Exon_iter++;
                     }
                     else
-                        ofs<<"0 ";
+                        ofs<<"0";
                 }
             }
-            ofs<<TypeCount[TypeIndex]<<" ";
+            ofs<<"\t"<<TypeCount[TypeIndex]<<"\t";
             if(TypeDirection[TypeIndex]>0)
                 ofs<<"+"<<std::endl;
             else if(TypeDirection[TypeIndex]<0)
@@ -673,7 +678,7 @@ namespace IsoLasso::format
                 ValidSGIndex[Type_index] = -1;
         }
 
-        ofs<<"PETypes:"<<nPETypes<<std::endl;
+        ofs<<"[PETypes]\n"<<nPETypes<<std::endl;
         for(auto PE_Iter=PETypes_map.begin();PE_Iter!=PETypes_map.end();PE_Iter++)
         {
             ofs<<ValidSGIndex[PE_Iter->first.first]<<" "<<
@@ -681,6 +686,37 @@ namespace IsoLasso::format
                  PE_Iter->second.size()<<" ";
             ofs<<std::accumulate(PE_Iter->second.begin(),PE_Iter->second.end(),0.0)/PE_Iter->second.size()<<std::endl;
         }
+
+        ofs<<"[Assembled Isoforms]"<<std::endl;
+        ofs << std::left << std::setw(15) << "Index "
+                         << std::setw(30) << "Isoform " 
+                         << std::setw(15) << "Expression Level " 
+                         << std::endl;
+        for(auto Isf_index=0;Isf_index<CandidateIsf.size();++Isf_index)
+        {
+            ofs<<std::left << std::setw(15) << Isf_index <<"\t";
+
+            auto iter {CandidateIsf[Isf_index].begin()};
+            for(auto exon_index=0;exon_index<ExonBoundary.size();++exon_index)
+            {
+                if(ValidExons[exon_index])
+                {
+                    if(*iter==exon_index)
+                    {
+                        ofs<<"1";
+                        ++iter;
+                    }
+                    else
+                        ofs<<"0";
+                }
+            }
+            ofs<<std::left << std::setw(15) << "\t" << ExpLv[Isf_index]
+                           << std::endl;
+        }
+
+
+
+
 
         ofs << "=================== END OF ReadGroup "<< RG_index+1<<"-"<<SubRG_index+1<<" ==================="<<std::endl;
         return;
@@ -785,7 +821,7 @@ namespace IsoLasso::utils
         RG.reset();
 
         //Process each sub-readgroup
-        for(auto SubRG:SubRGs)
+        for(auto& SubRG:SubRGs)
         {
             //Enumerate all boundaries
             SubRG.CalculateBound(MIN_JUNC_COV,MIN_GAP_SPAN);
@@ -794,14 +830,12 @@ namespace IsoLasso::utils
             //Remove Exons with too small coverage and not included in any junction type
             SubRG.RemoveWeakExons(MIN_CVG_FRAC);
 
-
             //Remove Types with Invalid exons and those reads with invalid types and recalculate coverage statistics
             SubRG.CalculateValidExons();
 
             if(SubRG.validSize() < MIN_RG_SIZE)
                 continue;
                 
-            SubRG.WriteStatsToFile(RG_STATS_FS);
             SubRG.PostProcess();
             
             /* E-M Module */
