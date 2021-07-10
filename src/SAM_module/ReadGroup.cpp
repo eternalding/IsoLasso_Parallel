@@ -616,6 +616,7 @@ namespace IsoLasso::format
         ofs <<"[SGTypes]"<< std::endl;
         ofs << std::left << std::setw(15) << "Index "
                          << std::setw(15) << "Type " 
+                         << std::setw(15) << "TypeCount"
                          << std::setw(15) << "Direction " 
                          << std::endl;
 
@@ -623,7 +624,7 @@ namespace IsoLasso::format
         {
             if(!ValidType[TypeIndex])
                 continue;
-            ofs<<TypeIndex<<"\t";
+            ofs<<TypeIndex<<" \t ";
             auto Exon_iter {SGTypes[TypeIndex].begin()};
 
             for(auto exon_index=0;exon_index<ExonBoundary.size();exon_index++)
@@ -641,7 +642,7 @@ namespace IsoLasso::format
                         ofs<<"0";
                 }
             }
-            ofs<<"\t"<<TypeCount[TypeIndex]<<"\t";
+            ofs<<" \t "<<TypeCount[TypeIndex]<<" \t ";
             if(TypeDirection[TypeIndex]>0)
                 ofs<<"+"<<std::endl;
             else if(TypeDirection[TypeIndex]<0)
@@ -713,14 +714,34 @@ namespace IsoLasso::format
             ofs<<std::left << std::setw(15) << "\t" << ExpLv[Isf_index]
                            << std::endl;
         }
-
-
-
-
-
         ofs << "=================== END OF ReadGroup "<< RG_index+1<<"-"<<SubRG_index+1<<" ==================="<<std::endl;
+
         return;
     }   
+
+
+    void
+    ReadGroup::WritePredToGTF(std::ofstream& ofs,
+                              const TwoDimVec<uint32_t>& CandidateIsf,
+                              const std::vector<double>& ExpLv)
+    {
+        auto Isf_cnt {0};
+        for(const auto& Isf:CandidateIsf)
+        {
+            ofs<<ChrName<<"\t"<<"IsoLasso_"<<version<<"\t"<<"transcript"<<"\t"<<
+                 ExonBoundary[Isf.front()].first<<"\t"<<ExonBoundary[Isf.back()].second<<"\t"
+                 <<"."<<"\t"<<"."<<"\t"<<"FPKM:"<<ExpLv[Isf_cnt]<<std::endl;
+            
+            for(auto exon_index=0;exon_index<Isf.size();++exon_index)
+            {
+                ofs<<ChrName<<"\t"<<"IsoLasso_"<<version<<"\t"<<"exon"<<"\t"<<
+                     ExonBoundary[Isf[exon_index]].first<<"\t"<<ExonBoundary[Isf[exon_index]].second<<"\t"
+                     <<"."<<"\t"<<"."<<"\t"<<"FPKM:"<<ExpLv[Isf_cnt]<<std::endl;
+            }
+            ++Isf_cnt;
+        }
+        return;
+    }
 
     void
     ReadGroup::PostProcess()
@@ -811,7 +832,7 @@ namespace IsoLasso::format
 namespace IsoLasso::utils
 {
     void
-    ProcessReadGroup(IsoLasso::format::ReadGroup& RG)
+    ProcessReadGroup(IsoLasso::format::ReadGroup RG)
     {
         //If segments within same read has too high coverage, remove them.
         RG.RemoveLongSpanReads(MAX_EXON_SPAN,MAX_JUNCTION_COVERAGE);

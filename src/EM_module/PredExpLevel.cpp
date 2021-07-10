@@ -242,7 +242,7 @@ namespace IsoLasso::Algorithm
                 NumofPaths++;
                 if(NumofPaths>=MAXPATH_PERNODE)
                 {
-                    std::cout<<"Warning: reached maximum path "<<MAXPATH_PERNODE <<" per node!"<<std::endl;
+                    //std::cout<<"Warning: reached maximum path "<<MAXPATH_PERNODE <<" per node!"<<std::endl;
                     break;
                 }
                 else//Pop from stack

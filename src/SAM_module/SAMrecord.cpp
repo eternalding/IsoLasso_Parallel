@@ -23,6 +23,11 @@ namespace IsoLasso::format
         else
             return false;    
     }
+    bool
+    MMP()
+    {
+        return true;
+    }
     ///END OF HEADRECORD
     ///START OF RECORD
     bool

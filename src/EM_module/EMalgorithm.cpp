@@ -9,7 +9,9 @@
 #include<set>
 #include<utils/Auxiliario.hpp>
 #include<ranges>
+#include <mutex>
 
+std::mutex IO_Mutex;
 std::ofstream IsoLasso::utils::RG_STATS_FS,IsoLasso::utils::GTF_FS;
 
 namespace IsoLasso::Algorithm
@@ -50,8 +52,10 @@ namespace IsoLasso::Algorithm
         for(auto Isf_index=0;Isf_index<Candidate_Isfs.size();++Isf_index)
             ExpLv.emplace_back(EMParameters.IsoformProb[Isf_index]*double(RG.ReadCount)/IsfLen[Isf_index]);
 
+        IO_Mutex.lock();
         RG.WriteStatsToFile(IsoLasso::utils::RG_STATS_FS,Candidate_Isfs,ExpLv);
-
+        RG.WritePredToGTF(IsoLasso::utils::GTF_FS,Candidate_Isfs,ExpLv);
+        IO_Mutex.unlock();
         return;
     }
     void 
