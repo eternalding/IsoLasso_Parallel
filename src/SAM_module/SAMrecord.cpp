@@ -54,13 +54,20 @@ namespace IsoLasso::format
             IsoLasso::utils::Setfields(Record);
             IsoLasso::utils::ParseCIGAR(Record);
 
+            //Splice Direction
+            Record.SpliceDir = 0;
             if (iss.rdbuf()->in_avail())
             {
                 std::string Opt_field;
                 while(iss>>Opt_field)
                 {
                     if (auto pos=Opt_field.find("XS:A:") ; pos!=std::string::npos)
-                        Record.SpliceDir=Opt_field[pos+5]=='+'?1:-1;
+                    {
+                        if(Opt_field[pos+5]=='+')
+                            Record.SpliceDir = 1;
+                        else if(Opt_field[pos+5]=='-')
+                            Record.SpliceDir = -1;
+                    }
                 }
             }
             return true;

@@ -581,7 +581,8 @@ namespace IsoLasso::format
     void
     ReadGroup::WriteStatsToFile(std::ofstream& ofs,
                                 const TwoDimVec<uint32_t>& CandidateIsf,
-                                const std::vector<double>& ExpLv)
+                                const std::vector<double>& ExpLv,
+                                const std::vector<int64_t>& IsfDir)
     {
         ofs << "=================== BEGIN OF ReadGroup "<< RG_index+1<<"-"<<SubRG_index+1<<" ==================="<<std::endl;
         ofs << "[Boundary]\n" << ChrName<<":("<<CurrentRange.first<<"-"<<CurrentRange.second<<"), Orientation:"<<Orientation<<std::endl;       
@@ -624,7 +625,7 @@ namespace IsoLasso::format
         {
             if(!ValidType[TypeIndex])
                 continue;
-            ofs<<TypeIndex<<" \t ";
+            ofs<<std::left << std::setw(15)<<TypeIndex;
             auto Exon_iter {SGTypes[TypeIndex].begin()};
 
             for(auto exon_index=0;exon_index<ExonBoundary.size();exon_index++)
@@ -642,13 +643,14 @@ namespace IsoLasso::format
                         ofs<<"0";
                 }
             }
-            ofs<<" \t "<<TypeCount[TypeIndex]<<" \t ";
+            
+            ofs<< std::setw(15)<<" "<<TypeCount[TypeIndex];
             if(TypeDirection[TypeIndex]>0)
-                ofs<<"+"<<std::endl;
+                ofs<<" +"<<std::endl;
             else if(TypeDirection[TypeIndex]<0)
-                ofs<<"-"<<std::endl;
+                ofs<<" -"<<std::endl;
             else
-                ofs<<"."<<std::endl;
+                ofs<<" ."<<std::endl;
         }
 
         uint32_t nPETypes {0};
@@ -723,21 +725,84 @@ namespace IsoLasso::format
     void
     ReadGroup::WritePredToGTF(std::ofstream& ofs,
                               const TwoDimVec<uint32_t>& CandidateIsf,
-                              const std::vector<double>& ExpLv)
+                              const std::vector<double>& ExpLv,
+                              const std::vector<int64_t>& IsfDir)
     {
         auto Isf_cnt {0};
+        auto dir {'.'};
         for(const auto& Isf:CandidateIsf)
         {
-            ofs<<ChrName<<"\t"<<"IsoLasso_"<<version<<"\t"<<"transcript"<<"\t"<<
-                 ExonBoundary[Isf.front()].first<<"\t"<<ExonBoundary[Isf.back()].second<<"\t"
-                 <<"."<<"\t"<<"."<<"\t"<<"FPKM:"<<ExpLv[Isf_cnt]<<std::endl;
+            if(IsfDir[Isf_cnt]>0)
+                dir='+';
+            else if(IsfDir[Isf_cnt]<0)
+                dir='-';
+            else
+                dir='.';
+            ofs<<ChrName<<"\t"
+               <<"IsoLasso_"<<version<<"\t"
+               <<"transcript"<<"\t"
+               <<ExonBoundary[Isf.front()].first<<"\t"
+               <<ExonBoundary[Isf.back()].second<<"\t"
+               <<"1000"<<"\t"
+               <<dir<<"\t"
+               <<"."<<"\t"
+               <<"gene_id \""<<"ReadGroup "<<RG_index+1<<"-"<<SubRG_index+1<<"\"; "
+               <<"transcript_id \""<<"Isf"<<RG_index+1<<"_"<<SubRG_index+1<<"_"<<Isf_cnt+1<<"\"; "
+               <<"FPKM \""<<ExpLv[Isf_cnt]<<"\"; "
+               <<std::endl;
             
-            for(auto exon_index=0;exon_index<Isf.size();++exon_index)
+
+
+            //Merge contiguous exons
+            auto exon_iter {Isf.begin()};
+            auto exon_start {ExonBoundary[*exon_iter].first}, exon_end {ExonBoundary[*exon_iter].second};
+            auto NewExonFlag {true};
+            ++exon_iter;
+            while(exon_iter!=Isf.end())
             {
-                ofs<<ChrName<<"\t"<<"IsoLasso_"<<version<<"\t"<<"exon"<<"\t"<<
-                     ExonBoundary[Isf[exon_index]].first<<"\t"<<ExonBoundary[Isf[exon_index]].second<<"\t"
-                     <<"."<<"\t"<<"."<<"\t"<<"FPKM:"<<ExpLv[Isf_cnt]<<std::endl;
+                if(ExonBoundary[*exon_iter].first==(exon_end+1)) // Contiguous exon
+                {
+                    exon_end = ExonBoundary[*exon_iter].second;
+                    ++exon_iter;
+                    NewExonFlag = false;
+                }
+                else
+                {
+                    ofs <<ChrName<<"\t"
+                        <<"IsoLasso_"<<version<<"\t"
+                        <<"exon"<<"\t"
+                        <<exon_start<<"\t"
+                        <<exon_end<<"\t"
+                        <<"1000"<<"\t"
+                        <<dir<<"\t"
+                        <<"."<<"\t"
+                        <<"gene_id \""<<"ReadGroup "<<RG_index+1<<"-"<<SubRG_index+1<<"\"; "
+                        <<"transcript_id \""<<"Isf" <<RG_index+1<<"_"<<SubRG_index+1<<"_"<<Isf_cnt+1<<"\"; "
+                        <<"exon_number "<<*exon_iter+1<<"; "
+                        <<std::endl;   
+
+                    exon_start  = ExonBoundary[*exon_iter].first;
+                    exon_end    = ExonBoundary[*exon_iter].second;
+                    NewExonFlag = true;
+                        
+                    ++exon_iter;            
+                }
             }
+
+            ofs<<ChrName<<"\t"
+            <<"IsoLasso_"<<version<<"\t"
+            <<"exon"<<"\t"
+            <<exon_start<<"\t"
+            <<exon_end<<"\t"
+            <<"1000"<<"\t"
+            <<dir<<"\t"
+            <<"."<<"\t"
+            <<"gene_id \""<<"ReadGroup "<<RG_index+1<<"-"<<SubRG_index+1<<"\"; "
+            <<"transcript_id \""<<"Isf"<<RG_index+1<<"_"<<SubRG_index+1<<"_"<<Isf_cnt+1<<"\"; "
+            <<"exon_number "<<Isf.back()+1<<"; "
+            <<std::endl;
+            
+
             ++Isf_cnt;
         }
         return;
@@ -848,6 +913,24 @@ namespace IsoLasso::utils
             SubRG.CalculateBound(MIN_JUNC_COV,MIN_GAP_SPAN);
             //Calculate SGType (Combinations of high quality exon combinations)
             SubRG.CalculateType();
+
+            /*
+            std::cout<<"Direction:"<<std::endl;
+            for(auto dir:SubRG.Direction)
+                std::cout<<dir<<" ";
+            std::cout<<std::endl;
+
+            std::cout<<"TypeDir:"<<std::endl;
+            std::cout<<SubRG.RG_index<<"-"<<SubRG.SubRG_index<<std::endl;
+            for(auto Dir:SubRG.TypeDirection) 
+                std::cout<<Dir<<" ";
+            std::cout<<std::endl;*/
+            /*
+            std::cout<<"Exon Bounds:"<<std::endl;
+            for(auto i:SubRG.ExonBoundary)
+                std::cout<<i.first<<" "<<i.second<<std::endl;*/
+
+
             //Remove Exons with too small coverage and not included in any junction type
             SubRG.RemoveWeakExons(MIN_CVG_FRAC);
 
@@ -861,6 +944,9 @@ namespace IsoLasso::utils
             
             /* E-M Module */
             Algorithm::PredExpLevel(SubRG);
+
+            //Finished
+            //SubRG.reset();
         }
         return;
     }

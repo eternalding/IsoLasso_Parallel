@@ -26,12 +26,11 @@ namespace IsoLasso::Algorithm
         std::vector<uint32_t> IsfLen;
         IsoLasso::Algorithm::GetIsoformLen(RG,Candidate_Isfs,IsfLen);
 
-        //Calculate Isoform direction(TODO)
-        std::vector<int16_t> IsoDir;
-        std::vector<double> Priors;
+        //Calculate Isoform direction
+        std::vector<int64_t> IsoDir(Candidate_Isfs.size(),0);
 
         TwoDimVec<double> SGSupport(RG.SGTypes.size(),std::vector<double>(Candidate_Isfs.size(),0));
-        GetTypeSupport(RG,Candidate_Isfs,SGSupport,IsfLen);
+        GetTypeSupportAndIsfDir(RG,Candidate_Isfs,SGSupport,IsfLen,IsoDir);
 
         /*
         std::cout<<"Assembled Isoforms:"<<std::endl;
@@ -53,17 +52,19 @@ namespace IsoLasso::Algorithm
             ExpLv.emplace_back(EMParameters.IsoformProb[Isf_index]*double(RG.ReadCount)/IsfLen[Isf_index]);
 
         IO_Mutex.lock();
-        RG.WriteStatsToFile(IsoLasso::utils::RG_STATS_FS,Candidate_Isfs,ExpLv);
-        RG.WritePredToGTF(IsoLasso::utils::GTF_FS,Candidate_Isfs,ExpLv);
+        RG.WriteStatsToFile(IsoLasso::utils::RG_STATS_FS,Candidate_Isfs,ExpLv,IsoDir);
+        RG.WritePredToGTF(IsoLasso::utils::GTF_FS,Candidate_Isfs,ExpLv,IsoDir);
         IO_Mutex.unlock();
         return;
     }
+
     void 
-    GetTypeSupport(const IsoLasso::format::ReadGroup& RG,
-                   const TwoDimVec<uint32_t>& Candidate_Isfs,
-                   TwoDimVec<double>& SGSupport,
-                   const std::vector<uint32_t>& IsfLen)
-    {
+    GetTypeSupportAndIsfDir(const IsoLasso::format::ReadGroup& RG,
+                         const TwoDimVec<uint32_t>& Candidate_Isfs,
+                         TwoDimVec<double>& SGSupport,
+                         const std::vector<uint32_t>& IsfLen,
+                         std::vector<int64_t>& IsfDir)
+    {        
         const auto& ExonBoundary = RG.ExonBoundary;
         for(auto Isf_index=0;Isf_index<Candidate_Isfs.size();Isf_index++)
         {
@@ -76,6 +77,7 @@ namespace IsoLasso::Algorithm
                         TypeLen += (RG.ExonBoundary[ExonIndex].second-RG.ExonBoundary[ExonIndex].first+1);
 
                     SGSupport[Type_index][Isf_index] = TypeLen / double(IsfLen[Isf_index]);
+                    IsfDir[Isf_index] += RG.TypeDirection[Type_index];
                 }
             }
         }
