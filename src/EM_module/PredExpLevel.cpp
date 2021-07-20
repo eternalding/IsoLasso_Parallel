@@ -77,27 +77,31 @@ namespace IsoLasso::Algorithm
         std::cout<<std::endl;
 #endif
 
-        //IsoLasso::utils::Check_ReadGroup(RG);
-
         //Create tree structure
         std::vector<IsoLasso::Algorithm::ExonNode> ExonTree;
         for(auto Exon_idx=0;Exon_idx<NumExons;++Exon_idx)
             ExonTree.emplace_back(Exon_idx,RG.ReadSupportMatrix[Exon_idx],Explv,JuncExplv);
 
+        /*
+        if(RG.CurrentRange.first>=3800000 && RG.CurrentRange.first<=3900000)
+        {
+            std::cout<<RG.CurrentRange.first<<" "<<RG.CurrentRange.second<<std::endl;
+            IsoLasso::utils::print1Dvector(Outdegree);
+            for(auto Exon_idx=0;Exon_idx<NumExons;++Exon_idx)
+            {
+                std::cout<<"Exon "<<Exon_idx<<std::endl;
+                for(auto neighbor:ExonTree[Exon_idx].getNeighbors())
+                    std::cout<<neighbor.first<<","<<neighbor.second<<" ";
+                std::cout<<std::endl;
+                IsoLasso::utils::print1Dvector(RG.ReadSupportMatrix[Exon_idx]);
+                IsoLasso::utils::print1Dvector(Explv);
+                IsoLasso::utils::print1Dvector(JuncExplv);
+            }
+        }*/
 
         //Choose different exons as beginning
         std::vector<bool>                  ExonsCoveredByIsoform(RG.ExonBoundary.size(),false);
-        uint32_t        NumofFoundPaths       {0};
-
-        /*
-        for(auto i=0;i<ExonTree.size();i++)
-        {
-            std::cout<<"Exon "<<i<<std::endl;
-            for(auto elem:ExonTree[i].getNeighbors())
-                std::cout<<elem.first<<" ";
-            std::cout<<'\n';
-        }*/
-
+        uint32_t                           NumofFoundPaths       {0};
 
         //Choose important exons and perform traversal
         while(true)
@@ -117,6 +121,8 @@ namespace IsoLasso::Algorithm
                 if(Is_selected)
                     Selected_Exon.push_back(exon_index); // Should start from here
             }
+
+
 
 #ifdef DEBUG
             std::cout<<"SelectedExons"<<std::endl;

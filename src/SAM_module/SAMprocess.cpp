@@ -57,6 +57,8 @@ namespace IsoLasso::utils
         if (!fin.is_open())
             throw std::invalid_argument("Failed to open target SAM file!");
 
+        IsoLasso::utils::TOTAL_READ_CNT = IsoLasso::utils::TotalReadCnt(arguments.SAMFILE);
+
         IsoLasso::format::Header_record HRecord;
         IsoLasso::format::Sam_record Record;
         IsoLasso::format::ReadGroup RG;
@@ -94,8 +96,6 @@ namespace IsoLasso::utils
                 //Begin new readGroup
                 else if(Record.RName != RG.ChrName || Record.Pos > RG.CurrentRange.second + MIN_GAP_SPAN)
                 {                
-                    std::cout<<Record.Pos<<std::endl;
-                    std::cout<<RG.CurrentRange.first<<" "<<RG.CurrentRange.second<<std::endl;
                     RG.RG_index = Total_RG_index;
                     if(RG.size()>MIN_RG_SIZE)
                     {
@@ -108,6 +108,7 @@ namespace IsoLasso::utils
 #endif
                         Valid_RG_index++;
                         ReadCount += RG.validSize();
+                        
                         pool.submit(IsoLasso::utils::ProcessReadGroup,std::move(RG));
                     }
                     else if (RG.size()>0)// RG is not large enough
@@ -162,7 +163,6 @@ namespace IsoLasso::utils
 
 
         std::cout<<"Process last Read Group."<<std::endl;
-        std::cout<<RG.validSize()<<std::endl;
         if(RG.ReadStart.size()>MIN_RG_SIZE)
         {
             ReadCount += RG.validSize();
