@@ -23,7 +23,7 @@ namespace IsoLasso::format
         TwoDimVec<uint32_t>                                     ReadEnd                                 ;
         std::vector<int32_t>                                    PairendTable                            ;
         std::vector<bool>                                       ValidRead                               ;
-        std::vector<int16_t>                                    Direction                               ;
+        std::vector<int64_t>                                    Direction                               ;
         std::map<std::string,std::map<uint32_t,uint32_t>>       QNameQueryTable                         ;
         std::int8_t                                             Orientation       {'.'}                 ;
         range_type                                              CurrentRange      {range_type(0,0)}     ;
@@ -34,7 +34,7 @@ namespace IsoLasso::format
         std::vector<std::vector<uint32_t>>                      SGTypes                                 ;
         std::vector<bool>                                       ValidType                               ;
         std::vector<uint32_t>                                   TypeCount                               ;
-        std::vector<int16_t>                                    TypeDirection                           ;                              
+        std::vector<int64_t>                                    TypeDirection                           ;                              
         std::vector<uint32_t>                                   Read2Type                               ;
         std::map<uint32_t,uint32_t>                             ReadLen_Count                           ;
         std::vector<std::vector<double>>                        ExonStats                               ;
@@ -57,6 +57,8 @@ namespace IsoLasso::format
             PairendTable.resize(0);
             ValidRead.resize(0);
             Direction.resize(0);
+            TypeDirection.resize(0);
+            TypeDirection.shrink_to_fit();
             ReadStart.shrink_to_fit();
             ReadEnd.shrink_to_fit();
             PairendTable.shrink_to_fit();
@@ -78,8 +80,8 @@ namespace IsoLasso::format
         AddRecord(const IsoLasso::format::Sam_record& record);
 
         inline void
-        AddPair(const std::vector<uint32_t>& Start, const std::vector<uint32_t>& End, const uint16_t direction,\
-                const std::vector<uint32_t>& PE_Start, const std::vector<uint32_t>& PE_End, const uint16_t PE_direction)
+        AddPair(const std::vector<uint32_t>& Start, const std::vector<uint32_t>& End, const int64_t direction,\
+                const std::vector<uint32_t>& PE_Start, const std::vector<uint32_t>& PE_End, const int64_t PE_direction)
         {
             AddWithoutPair(Start,End,direction);
             AddWithoutPair(PE_Start,PE_End,PE_direction);
@@ -103,7 +105,9 @@ namespace IsoLasso::format
         }
 
         inline void
-        AddWithoutPair(const std::vector<uint32_t>& Start, const std::vector<uint32_t>& End, const uint16_t direction)
+        AddWithoutPair(const std::vector<uint32_t>& Start, 
+                       const std::vector<uint32_t>& End, 
+                       const int64_t direction)
         {
             ReadStart.emplace_back(Start);
             ReadEnd.emplace_back(End);
@@ -145,7 +149,7 @@ namespace IsoLasso::format
         inline void 
         SetOrientation()
         {
-            int32_t DirSum {std::accumulate(Direction.begin(),Direction.end(),0)};
+            int64_t DirSum {std::accumulate(Direction.begin(),Direction.end(),0)};
 
             if(DirSum>0)
                 Orientation = {'+'};
@@ -154,13 +158,18 @@ namespace IsoLasso::format
             return;
         }
         
-        void CalculateBound(const uint32_t MIN_JUNC_COV,const uint32_t MIN_GAP_SPAN);
-        void GetCoverage(std::map<uint32_t,int32_t>& coverage);
-        void GetCvgCutPoint(const std::map<uint32_t,int32_t>&coverage,std::vector<range_type>& Cutpoint,
-                            const uint32_t threshold,const uint32_t MIN_GAP_SPAN);
-        void GetCvgStats(std::map<uint32_t,int32_t>&coverage,const std::map<uint32_t,uint32_t>& Boundary,
-                        std::map<uint32_t,std::vector<double>>& CvgStat);
-        void CalculateType();
+        void 
+        CalculateBound(const uint32_t MIN_JUNC_COV,const uint32_t MIN_GAP_SPAN);
+        void 
+        GetCoverage(std::map<uint32_t,int32_t>& coverage);
+        void 
+        GetCvgCutPoint(const std::map<uint32_t,int32_t>&coverage,std::vector<range_type>& Cutpoint,
+                       const uint32_t threshold,const uint32_t MIN_GAP_SPAN);
+        void 
+        GetCvgStats(std::map<uint32_t,int32_t>&coverage,const std::map<uint32_t,uint32_t>& Boundary,
+                    std::map<uint32_t,std::vector<double>>& CvgStat);
+        void 
+        CalculateType();
 
         std::vector<uint32_t> 
         GetType(const std::vector<uint32_t>& SegStart,const std::vector<uint32_t>& SegEnd,
@@ -183,7 +192,14 @@ namespace IsoLasso::format
         void
         WriteStatsToFile(std::ofstream& ofs,
                          const TwoDimVec<uint32_t>& CandidateIsf,
-                         const std::vector<double>& ExpLv);
+                         const std::vector<double>& ExpLv,
+                         const std::vector<int64_t>& IsfDir);
+
+        void
+        WritePredToGTF(std::ofstream& ofs,
+                       const TwoDimVec<uint32_t>& CandidateIsf,
+                       const std::vector<double>& ExpLv,
+                       const std::vector<int64_t>& IsfDir);
 
         void
         PostProcess();
@@ -212,6 +228,9 @@ namespace IsoLasso::format
         }
 
 
+
+
+
     };
 
 
@@ -220,7 +239,7 @@ namespace IsoLasso::format
 namespace IsoLasso::utils
 {
     void
-    ProcessReadGroup(IsoLasso::format::ReadGroup& RG);
+    ProcessReadGroup(IsoLasso::format::ReadGroup RG);
 
     void
     GenerateInstance(IsoLasso::format::ReadGroup& RG,const range_type& current_range);

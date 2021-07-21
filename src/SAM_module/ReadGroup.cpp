@@ -11,19 +11,17 @@ namespace IsoLasso::format
     ReadGroup::AddRecord(const IsoLasso::format::Sam_record& record)
     {
         AddWithoutPair(record);
+        
         if(record.isPairedEnd)
-        {
-            if(record.RNext==record.RName || record.RNext=="=")
-            {          
-                if(QNameQueryTable[record.QName].find(record.Pos)!=QNameQueryTable[record.QName].end())//Other hand not exist
-                {
-                    PairendTable[QNameQueryTable[record.QName][record.Pos]] = ReadStart.size()-1; //Current Read
-                    PairendTable.back() = QNameQueryTable[record.QName][record.Pos];
-                    QNameQueryTable[record.QName].erase(QNameQueryTable[record.QName][record.Pos]);                    
-                }
-                else
-                    QNameQueryTable[record.QName][record.PNext] = ReadStart.size()-1; //Current Read
+        {        
+            if(QNameQueryTable[record.QName].find(record.Pos)!=QNameQueryTable[record.QName].end())//Other hand not exist
+            {
+                PairendTable[QNameQueryTable[record.QName][record.Pos]] = ReadStart.size()-1; //Current Read
+                PairendTable.back() = QNameQueryTable[record.QName][record.Pos];
+                QNameQueryTable[record.QName].erase(QNameQueryTable[record.QName][record.Pos]);                    
             }
+            else
+                QNameQueryTable[record.QName][record.PNext] = ReadStart.size()-1; //Current Read 
         }
         ReadLen_Count[utils::GetEfficientLen(record)]++;
         return;

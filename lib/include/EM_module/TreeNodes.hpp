@@ -29,8 +29,8 @@ namespace IsoLasso::Algorithm
                 this->Exon_index = Exon_index;
 
                 auto ValidExons = std::ranges::views::iota(0,int(OutDegree.size()))
-                                 |std::ranges::views::filter([&Exon_index](uint32_t i) {return i>Exon_index;})
-                                 |std::ranges::views::filter([&OutDegree](auto i) { return OutDegree[i]>=MIN_JUNC_READ;});
+                                 |std::ranges::views::filter([&Exon_index](const uint32_t i) {return i>Exon_index;})
+                                 |std::ranges::views::filter([&OutDegree](const auto i) { return OutDegree[i]>=MIN_JUNC_READ;});
 
                 if(std::ranges::empty(ValidExons))
                     return;

@@ -53,10 +53,10 @@ namespace IsoLasso::Algorithm
         for(auto Isf_index=0;Isf_index<Candidate_Isfs.size();++Isf_index)
             ExpLv.emplace_back(EMParameters.IsoformProb[Isf_index]*double(RG.ReadCount)*10e9/(IsfLen[Isf_index]*IsoLasso::utils::TOTAL_READ_CNT));
 
-        //IO_Mutex.lock();
-        //RG.WriteStatsToFile(IsoLasso::utils::RG_STATS_FS,Candidate_Isfs,ExpLv,IsoDir);
-        //RG.WritePredToGTF(IsoLasso::utils::GTF_FS,Candidate_Isfs,ExpLv,IsoDir);
-        //IO_Mutex.unlock();
+        IO_Mutex.lock();
+        RG.WriteStatsToFile(IsoLasso::utils::RG_STATS_FS,Candidate_Isfs,ExpLv,IsoDir);
+        RG.WritePredToGTF(IsoLasso::utils::GTF_FS,Candidate_Isfs,ExpLv,IsoDir);
+        IO_Mutex.unlock();
         return;
     }
 

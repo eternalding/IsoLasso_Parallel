@@ -141,7 +141,7 @@ namespace IsoLasso::utils
 
         for(auto exon_index=0;exon_index<RG.ReadSupportMatrix.size();++exon_index)
         {
-            auto ExonLen {RG.ExonBoundary[exon_index].second-RG.ExonBoundary[exon_index].first};
+            auto ExonLen {RG.ExonBoundary[exon_index].second-RG.ExonBoundary[exon_index].first+1};
             auto RowSum  {std::accumulate(RG.ReadSupportMatrix[exon_index].begin(),RG.ReadSupportMatrix[exon_index].end(),0)};
             auto ColSum  {0};
             for(auto col_index=0;col_index<RG.ReadSupportMatrix[exon_index].size();col_index++)

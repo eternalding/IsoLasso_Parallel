@@ -78,10 +78,11 @@ namespace IsoLasso::Algorithm
     }
 
     inline void
-    GetTypeSupport(const IsoLasso::format::ReadGroup& RG,
-                   const TwoDimVec<uint32_t>& Candidate_Isfs,
-                   TwoDimVec<double>& SGSupport,
-                   const std::vector<uint32_t>& IsfLen);
+    GetTypeSupportAndIsfDir(const IsoLasso::format::ReadGroup& RG,
+                            const TwoDimVec<uint32_t>& Candidate_Isfs,
+                            TwoDimVec<double>& SGSupport,
+                            const std::vector<uint32_t>& IsfLen,
+                            std::vector<int64_t>& IsfDir);
 
     void
     EMAlgorithm(const TwoDimVec<uint32_t>& Candidate_Isfs,

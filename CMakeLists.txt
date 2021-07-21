@@ -64,12 +64,18 @@ CPMAddPackage(
   VERSION 1.0
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -std=c++20")
+# Boost 
+set(Boost_USE_STATIC_LIBS        ON)
+set(Boost_USE_MULTITHREADED      ON)
+set(Boost_USE_STATIC_RUNTIME    OFF)
+
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -std=c++20 -lpthread")
 
 aux_source_directory(. DIR_SRCS)
 
 message("${PROJECT_SOURCE_DIR}/lib/include")
-include_directories("${PROJECT_SOURCE_DIR}/lib/include")
+include_directories("${PROJECT_SOURCE_DIR}/lib/include" ${Boost_INCLUDE_DIRS})
 
 
 add_subdirectory(src/utils)
@@ -78,21 +84,34 @@ add_subdirectory(src/SAM_module)
 link_directories(lib/include/SAM_module)
 link_directories(lib/include/EM_module)
 link_directories(lib/include/utils)
-
+link_directories(${Boost_LIBRARY_DIRS})
 
 add_executable(IsoLasso_Parallel src/main.cpp)
 
-target_link_libraries(IsoLasso_Parallel SAM_functions utils_functions EM_functions)
+#find_package(Boost 1.73.0 REQUIRED COMPONENTS iostreams)
+#if(Boost_FOUND)
+#    INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIRS} )
+#    message(${Boost_INCLUDE_DIRS})
+#    target_link_libraries(IsoLasso_Parallel ${Boost_LIBRARY} )
+#    message("Boost iostream found!")
+#endif()
 
+#Pthread
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
+target_link_libraries(IsoLasso_Parallel SAM_functions utils_functions EM_functions Threads::Threads )
 
 ## UnitTest
 find_package(GTest REQUIRED)
 enable_testing()
 
-include_directories(${GTest_INCLUDE_DIR})
-add_executable(unittest Unittest/src/SAM_IO_test.cpp Unittest/src/SAMProcess_test.cpp)
-target_link_libraries(unittest gtest_main SAM_functions utils_functions EM_functions)
 
+add_executable(unittest Unittest/src/SAM_IO_test.cpp Unittest/src/SAMProcess_test.cpp)
+#include_directories(${Boost_INCLUDE_DIRS} ${GTest_INCLUDE_DIR} )
+#message(${Boost_LIBRARY_DIRS})
+#target_link_libraries(unittest Boost::iostreams)
+target_link_libraries(unittest SAM_functions utils_functions EM_functions gtest_main Threads::Threads )
 
 #[[
 # ---- Add source files ----

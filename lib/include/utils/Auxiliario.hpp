@@ -25,6 +25,10 @@ namespace IsoLasso::utils
         auto Start     {std::chrono::system_clock::now()};
         auto in_time_t {std::chrono::system_clock::to_time_t(Start)};
 
+        GTF_FS.open(OUTPUT_PREFIX+"_isoforms.gtf");
+        if(!GTF_FS.is_open())
+            std::__throw_invalid_argument("Cannot create .gtf file!");
+
         RG_STATS_FS.open(OUTPUT_PREFIX+"_RGStats.txt");
         if(!RG_STATS_FS.is_open())
             std::__throw_invalid_argument("Cannot write into ReadGroup Stats File!");
