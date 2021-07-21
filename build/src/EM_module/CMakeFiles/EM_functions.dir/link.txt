@@ -1,0 +1,2 @@
+/usr/bin/ar qc libEM_functions.a  CMakeFiles/EM_functions.dir/EMalgorithm.cpp.o CMakeFiles/EM_functions.dir/PredExpLevel.cpp.o
+/usr/bin/ranlib libEM_functions.a

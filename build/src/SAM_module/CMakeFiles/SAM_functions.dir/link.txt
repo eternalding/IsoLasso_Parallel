@@ -1,0 +1,2 @@
+/usr/bin/ar qc libSAM_functions.a  CMakeFiles/SAM_functions.dir/RangeSet.cpp.o CMakeFiles/SAM_functions.dir/ReadGroup.cpp.o CMakeFiles/SAM_functions.dir/SAMprocess.cpp.o CMakeFiles/SAM_functions.dir/SAMrecord.cpp.o
+/usr/bin/ranlib libSAM_functions.a
