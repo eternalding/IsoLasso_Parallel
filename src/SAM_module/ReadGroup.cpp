@@ -4,6 +4,7 @@
 #include <utils/Auxiliario.hpp>
 #include <SAM_module/SAMrecord.hpp>
 #include <EM_module/PredExpLevel.hpp>
+#include <EM_module/EMalgorithm.hpp>
 
 namespace IsoLasso::format
 {
@@ -724,14 +725,15 @@ namespace IsoLasso::format
     ReadGroup::WritePredToGTF(std::ofstream& ofs,
                               const TwoDimVec<uint32_t>& CandidateIsf,
                               const std::vector<double>& ExpLv,
-                              const std::vector<int64_t>& IsfDir)
+                              const std::vector<int64_t>& IsfDir,
+                              const std::vector<double>& IsoformProb)
     {
         auto Isf_cnt {0};
         auto dir {'.'};
         for(const auto& Isf:CandidateIsf)
         {
             //Ignore low expressed isoform
-            if(ExpLv[Isf_cnt]<ISF_EXPLV_THRESHOLD)
+            if(ExpLv[Isf_cnt]<ISF_EXPLV_THRESHOLD||IsoformProb[Isf_cnt]<IsoLasso::Algorithm::EMConfig::MinProbCut)
             {
                 Isf_cnt++;
                 continue;
@@ -755,8 +757,6 @@ namespace IsoLasso::format
                <<"RPKM \""<<ExpLv[Isf_cnt]<<"\"; "
                <<std::endl;
             
-
-
             //Merge contiguous exons
             auto exon_iter {Isf.begin()};
             auto exon_start {ExonBoundary[*exon_iter].first}, exon_end {ExonBoundary[*exon_iter].second}, exon_idx {*exon_iter};

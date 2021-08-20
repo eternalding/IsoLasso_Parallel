@@ -69,7 +69,7 @@ namespace IsoLasso::utils
 
         //ThreadPool
         const auto processor_count = std::thread::hardware_concurrency();
-        thread_pool pool(processor_count);
+        thread_pool pool(1);
 
         //Header is now unavailable
         while(fin>>HRecord);

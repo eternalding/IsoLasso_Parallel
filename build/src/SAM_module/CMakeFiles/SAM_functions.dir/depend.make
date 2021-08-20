@@ -7,6 +7,7 @@ src/SAM_module/CMakeFiles/SAM_functions.dir/RangeSet.cpp.o: ../lib/include/utils
 src/SAM_module/CMakeFiles/SAM_functions.dir/RangeSet.cpp.o: ../lib/include/utils/Commontype.hpp
 src/SAM_module/CMakeFiles/SAM_functions.dir/RangeSet.cpp.o: ../src/SAM_module/RangeSet.cpp
 
+src/SAM_module/CMakeFiles/SAM_functions.dir/ReadGroup.cpp.o: ../lib/include/EM_module/EMalgorithm.hpp
 src/SAM_module/CMakeFiles/SAM_functions.dir/ReadGroup.cpp.o: ../lib/include/EM_module/PredExpLevel.hpp
 src/SAM_module/CMakeFiles/SAM_functions.dir/ReadGroup.cpp.o: ../lib/include/EM_module/TreeNodes.hpp
 src/SAM_module/CMakeFiles/SAM_functions.dir/ReadGroup.cpp.o: ../lib/include/SAM_module/RangeSet.hpp

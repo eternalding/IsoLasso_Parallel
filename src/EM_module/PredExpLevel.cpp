@@ -27,6 +27,27 @@ namespace IsoLasso::Algorithm
         //Configs for prediction
         GenerateCandidateIsoform(RG,Candidate_Isfs,SubInsts);
 
+
+
+        std::cout<<"Candidate Isoforms:"<<std::endl;
+        for(const auto r:RG.ExonBoundary)
+            std::cout<<r.first<<" "<<r.second<<std::endl;
+
+        for(const auto Isf:Candidate_Isfs)
+        {
+            for(int i=0;i<RG.ExonBoundary.size();i++)
+            {
+                if(find(Isf.begin(),Isf.end(),i)!=Isf.end())
+                    std::cout<<1<<" ";
+                else
+                    std::cout<<0<<" ";
+            }
+            std::cout<<"\n";
+        }
+
+        IsoLasso::utils::print2Dvector(Candidate_Isfs);
+
+
         //Calculate expression level with E-M algorithm
         EM_Process(RG,Candidate_Isfs,SubInsts);
 
@@ -83,10 +104,10 @@ namespace IsoLasso::Algorithm
             ExonTree.emplace_back(Exon_idx,RG.ReadSupportMatrix[Exon_idx],Explv,JuncExplv);
 
         /*
-        if(RG.CurrentRange.first>=3800000 && RG.CurrentRange.first<=3900000)
+        if(RG.CurrentRange.first>=3700000 && RG.CurrentRange.first<=3800000)
         {
             std::cout<<RG.CurrentRange.first<<" "<<RG.CurrentRange.second<<std::endl;
-            IsoLasso::utils::print1Dvector(Outdegree);
+            //IsoLasso::utils::print1Dvector(Outdegree);  
             for(auto Exon_idx=0;Exon_idx<NumExons;++Exon_idx)
             {
                 std::cout<<"Exon "<<Exon_idx<<std::endl;
@@ -133,7 +154,6 @@ namespace IsoLasso::Algorithm
             bool FoundPath = false;
             for(const auto Start:Selected_Exon) 
             {
-                
                 if(ExonsCoveredByIsoform[Start])
                     continue;
                 else

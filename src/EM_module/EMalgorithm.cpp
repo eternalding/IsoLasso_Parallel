@@ -18,7 +18,6 @@ uint64_t IsoLasso::utils::TOTAL_READ_CNT;
 
 namespace IsoLasso::Algorithm
 {
-
     void
     EM_Process(IsoLasso::format::ReadGroup& RG,
                TwoDimVec<uint32_t>& Candidate_Isfs,
@@ -53,9 +52,10 @@ namespace IsoLasso::Algorithm
         for(auto Isf_index=0;Isf_index<Candidate_Isfs.size();++Isf_index)
             ExpLv.emplace_back(EMParameters.IsoformProb[Isf_index]*double(RG.ReadCount)*10e9/(IsfLen[Isf_index]*IsoLasso::utils::TOTAL_READ_CNT));
 
+        //Write to output
         IO_Mutex.lock();
         RG.WriteStatsToFile(IsoLasso::utils::RG_STATS_FS,Candidate_Isfs,ExpLv,IsoDir);
-        RG.WritePredToGTF(IsoLasso::utils::GTF_FS,Candidate_Isfs,ExpLv,IsoDir);
+        RG.WritePredToGTF(IsoLasso::utils::GTF_FS,Candidate_Isfs,ExpLv,IsoDir,EMParameters.IsoformProb);
         IO_Mutex.unlock();
         return;
     }
@@ -106,23 +106,21 @@ namespace IsoLasso::Algorithm
 
             //E-Step 
             double JointProbability = EStep(IsoEmitProb,TypeCount,EMParameters,Responsibility);
-            /*if(EMParameters.Verbose)
+            if(EMParameters.Verbose)
             {
                 std::cout<<"IsoEmitProb"<<std::endl;
                 IsoLasso::utils::print2Dvector(IsoEmitProb);
 
                 std::cout<<"Responsibility:"<<std::endl;
                 IsoLasso::utils::print2Dvector(Responsibility);
-            }*/
+            }
             
             MStep(IsoEmitProb,TypeCount,EMParameters,Responsibility,TotalReadCnt);
             
             if(EMParameters.Verbose)
             {
                 std::cout<<"["<<Iteration<<"]Isoform Probability:"<<std::endl;
-                for(auto prob:EMParameters.IsoformProb)
-                    std::cout<<prob<<" ";
-                std::cout<<std::endl;
+                IsoLasso::utils::print1Dvector(EMParameters.IsoformProb);
             }
 
             //Stopping criteria

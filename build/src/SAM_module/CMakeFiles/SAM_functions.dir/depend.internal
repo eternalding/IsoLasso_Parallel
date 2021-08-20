@@ -8,6 +8,7 @@ src/SAM_module/CMakeFiles/SAM_functions.dir/RangeSet.cpp.o
  ../lib/include/utils/Commontype.hpp
  /mnt/s/workspace/IsoLasso/Isolasso_parallel/src/SAM_module/RangeSet.cpp
 src/SAM_module/CMakeFiles/SAM_functions.dir/ReadGroup.cpp.o
+ ../lib/include/EM_module/EMalgorithm.hpp
  ../lib/include/EM_module/PredExpLevel.hpp
  ../lib/include/EM_module/TreeNodes.hpp
  ../lib/include/SAM_module/RangeSet.hpp

@@ -46,8 +46,8 @@ namespace IsoLasso::format
         std::uint32_t                                           RG_index          {0}                   ;
         std::uint32_t                                           SubRG_index       {0}                   ;
         std::vector<std::vector<uint32_t>>                      ReadSupportMatrix                       ;
-        std::uint32_t                                           PE_READ_DISTANCE  {PE_READ_DISTANCE}    ;
-        std::uint32_t                                           PE_READ_STD       {PE_READ_STD}         ;
+        //std::uint32_t                                           PE_READ_DISTANCE  {PE_READ_DISTANCE}    ;
+        //std::uint32_t                                           PE_READ_STD       {PE_READ_STD}         ;
 
         inline void 
         reset()
@@ -199,7 +199,8 @@ namespace IsoLasso::format
         WritePredToGTF(std::ofstream& ofs,
                        const TwoDimVec<uint32_t>& CandidateIsf,
                        const std::vector<double>& ExpLv,
-                       const std::vector<int64_t>& IsfDir);
+                       const std::vector<int64_t>& IsfDir,
+                       const std::vector<double>& IsoformProb);
 
         void
         PostProcess();

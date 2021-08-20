@@ -15,13 +15,13 @@ namespace IsoLasso::Algorithm
     {
         //HyperParameters 
         static constexpr   double           CutRate      {1e-6};
-        static constexpr   double           MinPICut     {1e-2};
+        static constexpr   double           MinProbCut   {1e-2};
         static constexpr   double           AlphaLow     {0.0} ;
         static constexpr   double           AlphaHigh    {5.0} ;
-        static constexpr   std::string_view InitMethod   {"UNIFORM"}; //RANDOM,UNIFORM
+        static constexpr   std::string_view InitMethod   {"RANDOM"}; //RANDOM,UNIFORM
         static constexpr   uint32_t         MaxIteration {500};
         static constexpr   uint32_t         MinIteration {10};
-        static constexpr   bool             Verbose      {false};
+        static constexpr   bool             Verbose      {true};
         static constexpr   double           MinDelta     {1e-4};
         static constexpr   double           bias         {0.0};
         

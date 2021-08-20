@@ -39,7 +39,7 @@ namespace IsoLasso::Algorithm
 
                 auto MaxJuncLv = std::ranges::max(ValidExons | std::ranges::views::transform([&JuncLv](auto i) -> const auto& { return JuncLv[i]; }));
 
-                auto ValidChilds  = ValidExons 
+                auto ValidChilds = ValidExons 
                                    |std::ranges::views::filter([&ExpLv,&JuncLv,MaxExpLv,MaxJuncLv](auto i)
                                                                {return (ExpLv[i]>=MaxExpLv*EXON_MIN_FRAC)&&(JuncLv[i]>=MaxJuncLv*JUNC_EXP_FRAC);}
                                                               )                
