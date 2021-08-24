@@ -26,28 +26,6 @@ namespace IsoLasso::Algorithm
 
         //Configs for prediction
         GenerateCandidateIsoform(RG,Candidate_Isfs,SubInsts);
-
-
-
-        std::cout<<"Candidate Isoforms:"<<std::endl;
-        for(const auto r:RG.ExonBoundary)
-            std::cout<<r.first<<" "<<r.second<<std::endl;
-
-        for(const auto Isf:Candidate_Isfs)
-        {
-            for(int i=0;i<RG.ExonBoundary.size();i++)
-            {
-                if(find(Isf.begin(),Isf.end(),i)!=Isf.end())
-                    std::cout<<1<<" ";
-                else
-                    std::cout<<0<<" ";
-            }
-            std::cout<<"\n";
-        }
-
-        IsoLasso::utils::print2Dvector(Candidate_Isfs);
-
-
         //Calculate expression level with E-M algorithm
         EM_Process(RG,Candidate_Isfs,SubInsts);
 

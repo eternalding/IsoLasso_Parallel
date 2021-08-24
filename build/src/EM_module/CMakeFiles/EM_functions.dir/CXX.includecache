@@ -145,6 +145,8 @@ ranges
 -
 mutex
 -
+cmath
+-
 
 /mnt/s/workspace/IsoLasso/Isolasso_parallel/src/EM_module/PredExpLevel.cpp
 SAM_module/ReadGroup.hpp

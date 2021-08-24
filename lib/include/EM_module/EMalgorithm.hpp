@@ -20,13 +20,12 @@ namespace IsoLasso::Algorithm
         static constexpr   double           AlphaHigh    {5.0} ;
         static constexpr   std::string_view InitMethod   {"RANDOM"}; //RANDOM,UNIFORM
         static constexpr   uint32_t         MaxIteration {500};
-        static constexpr   uint32_t         MinIteration {10};
-        static constexpr   bool             Verbose      {true};
-        static constexpr   double           MinDelta     {1e-4};
+        static constexpr   uint32_t         MinIteration {5};
+        static constexpr   bool             Verbose      {false};
+        static constexpr   double           MinDelta     {1e-2};
         static constexpr   double           bias         {0.0};
         
         //Learnable parameters
-                    double  Tao        {0.0} ;
         std::vector<double> IsoformProb      ;
         
 
@@ -61,19 +60,50 @@ namespace IsoLasso::Algorithm
             auto IsfLen {0};
             for(const auto exon_index:Isf)
                 IsfLen += (RG.ExonBoundary[exon_index].second-RG.ExonBoundary[exon_index].first+1);
-            IsfLen = IsfLen - RG.ReadLen + 1;
+            //IsfLen = IsfLen - RG.ReadLen + 1;
             IsoformLen.push_back(IsfLen);
         }
         return;
     }
 
+    /**
+     * Check if a SGType and a candidate isoform is compatible
+     * For example:
+     * 
+     * (Compatible)
+     * candidate Isf  : 11100001111111111111001
+     *         SGType : 11000000000000000000000
+     * 
+     * (Not compatible)
+     * candidate Isf  : 11111111111100000111111
+     *         SGType : 00100001000000000000000
+     */ 
     inline bool
     CheckCompatible(const std::vector<uint32_t>& candIsf,const std::vector<uint32_t>&SGType)
     {
         if(SGType.empty())
             return false;
-        else if(!std::ranges::includes(candIsf,SGType))
-            return false;
+        else
+        {
+            auto Type_Itr {SGType.begin()}, Isf_Itr {find(candIsf.begin(),candIsf.end(),*Type_Itr)};
+            if(Isf_Itr==candIsf.end())
+                return false;
+            else
+            {
+                while(Type_Itr!=SGType.end())
+                {
+                    if(Isf_Itr==candIsf.end())
+                        return false;
+                    else if(*Type_Itr!=*Isf_Itr)
+                        return false;
+                    else
+                    {
+                        Type_Itr++;
+                        Isf_Itr++;
+                    }
+                }
+            }
+        }
         return true;
     }
 
@@ -90,7 +120,7 @@ namespace IsoLasso::Algorithm
                 const std::vector<uint32_t>& TypeCount,
                 EMConfig& EMParameters);
     double
-    EStep(const TwoDimVec<double>& IsoEmitProb,
+    EStep(TwoDimVec<double>& IsoEmitProb,
           const std::vector<uint32_t>& TypeCount,
           EMConfig& EMParameters,
           TwoDimVec<double>& Responsibility);
@@ -99,8 +129,7 @@ namespace IsoLasso::Algorithm
     MStep(TwoDimVec<double>& IsoEmitProb,
           const std::vector<uint32_t>& TypeCount,
           EMConfig& EMParameters,
-          const TwoDimVec<double>& Responsibility,
-          const uint32_t TotalReadCnt);
+          const TwoDimVec<double>& Responsibility);
 
 }
 

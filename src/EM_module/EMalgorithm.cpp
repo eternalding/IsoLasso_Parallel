@@ -10,6 +10,7 @@
 #include<utils/Auxiliario.hpp>
 #include<ranges>
 #include <mutex>
+#include <cmath>
 
 std::mutex IO_Mutex;
 std::ofstream IsoLasso::utils::RG_STATS_FS,IsoLasso::utils::GTF_FS;
@@ -54,7 +55,7 @@ namespace IsoLasso::Algorithm
 
         //Write to output
         IO_Mutex.lock();
-        RG.WriteStatsToFile(IsoLasso::utils::RG_STATS_FS,Candidate_Isfs,ExpLv,IsoDir);
+        //RG.WriteStatsToFile(IsoLasso::utils::RG_STATS_FS,Candidate_Isfs,ExpLv,IsoDir);
         RG.WritePredToGTF(IsoLasso::utils::GTF_FS,Candidate_Isfs,ExpLv,IsoDir,EMParameters.IsoformProb);
         IO_Mutex.unlock();
         return;
@@ -62,12 +63,11 @@ namespace IsoLasso::Algorithm
 
     void 
     GetTypeSupportAndIsfDir(const IsoLasso::format::ReadGroup& RG,
-                         const TwoDimVec<uint32_t>& Candidate_Isfs,
-                         TwoDimVec<double>& SGSupport,
-                         const std::vector<uint32_t>& IsfLen,
-                         std::vector<int64_t>& IsfDir)
+                            const TwoDimVec<uint32_t>& Candidate_Isfs,
+                            TwoDimVec<double>& SGSupport,
+                            const std::vector<uint32_t>& IsfLen,
+                            std::vector<int64_t>& IsfDir)
     {        
-        const auto& ExonBoundary = RG.ExonBoundary;
         for(auto Isf_index=0;Isf_index<Candidate_Isfs.size();Isf_index++)
         {
             for(auto Type_index=0;Type_index<RG.SGTypes.size();Type_index++)
@@ -93,94 +93,131 @@ namespace IsoLasso::Algorithm
                 EMConfig& EMParameters)
     {
         auto Iteration {0};
-        auto delta   {0.0};
-        TwoDimVec<double> IsoEmitProb = SGSupport,Responsibility(SGSupport.size(),std::vector<double>(SGSupport[0].size(),0.0)); // Initialize as SGSupport
+        const auto nIsf = SGSupport[0].size(), nTypes = SGSupport.size();
+        TwoDimVec<double> IsoEmitProb {std::move(SGSupport)}, // Initialize as SGSupport
+                          Responsibility(nTypes,std::vector<double>(nIsf,0.0));
 
-        const auto TotalReadCnt {std::accumulate(TypeCount.begin(),TypeCount.end(),0)};
+        if(EMParameters.Verbose)
+        {
+            std::cout<<"Init Probability:"<<std::endl;
+            IsoLasso::utils::print1Dvector(EMParameters.IsoformProb);
+        }
 
-        std::vector<double> Prev_IsoformProb;
+        auto LogLikelihood = 0.0, PrevLogLikelihood = LogLikelihood;
 
         while(Iteration<EMParameters.MaxIteration)
         {
-            Prev_IsoformProb = EMParameters.IsoformProb;
+            PrevLogLikelihood = LogLikelihood;
 
             //E-Step 
-            double JointProbability = EStep(IsoEmitProb,TypeCount,EMParameters,Responsibility);
+            LogLikelihood = EStep(IsoEmitProb,TypeCount,EMParameters,Responsibility);
+            
             if(EMParameters.Verbose)
             {
                 std::cout<<"IsoEmitProb"<<std::endl;
+                for(int i=0;i<IsoEmitProb.size();i++)
+                {
+                    std::cout<<"Type "<<i<<":";
+                    for(int j=0;j<IsoEmitProb[0].size();j++)
+                        std::cout<<IsoEmitProb[i][j]<<" ";
+                    std::cout<<std::endl;
+                }
                 IsoLasso::utils::print2Dvector(IsoEmitProb);
-
+                std::cout<<"-----"<<std::endl;
                 std::cout<<"Responsibility:"<<std::endl;
+                for(int i=0;i<IsoEmitProb.size();i++)
+                {
+                    std::cout<<"Type "<<i<<":";
+                    for(int j=0;j<Responsibility[0].size();j++)
+                        std::cout<<Responsibility[i][j]<<" ";
+                    std::cout<<std::endl;
+                }
                 IsoLasso::utils::print2Dvector(Responsibility);
             }
             
-            MStep(IsoEmitProb,TypeCount,EMParameters,Responsibility,TotalReadCnt);
+            MStep(IsoEmitProb,TypeCount,EMParameters,Responsibility);
             
             if(EMParameters.Verbose)
             {
-                std::cout<<"["<<Iteration<<"]Isoform Probability:"<<std::endl;
+                std::cout<<"["<<Iteration<<"] Loglikelihood:"<<LogLikelihood<<std::endl;
+                std::cout<<"Isoform Probability:"<<std::endl;
                 IsoLasso::utils::print1Dvector(EMParameters.IsoformProb);
             }
 
             //Stopping criteria
-            for(auto Isf_idx=0;Isf_idx<EMParameters.IsoformProb.size();++Isf_idx)
-                delta+=(std::abs(EMParameters.IsoformProb[Isf_idx]-Prev_IsoformProb[Isf_idx]));
-            if(delta<=EMParameters.MinDelta && Iteration>=EMParameters.MinIteration)
+            if(LogLikelihood-PrevLogLikelihood<=EMParameters.MinDelta && Iteration>=EMParameters.MinIteration)
                 break;
             else
-                delta = 0.0;
-            ++Iteration;
+            {
+                IsoEmitProb = Responsibility;
+                ++Iteration;
+            }
         }
+        return;
     }
 
     double
-    EStep(const TwoDimVec<double>& IsoEmitProb,
+    EStep(TwoDimVec<double>& IsoEmitProb,
           const std::vector<uint32_t>& TypeCount,
           EMConfig& EMParameters,
           TwoDimVec<double>& Responsibility)
     {
+        auto LogLikelihood {0.0};
         //Calculate Responsibility
         for(auto TypeIndex=0;TypeIndex<IsoEmitProb.size();++TypeIndex)
         {
             auto MarginalProb {0.0};
             for(auto IsfIndex=0;IsfIndex<IsoEmitProb[0].size();++IsfIndex)
             {
-                Responsibility[TypeIndex][IsfIndex] = (IsoEmitProb[TypeIndex][IsfIndex]+TypeCount[TypeIndex]* EMParameters.bias)*EMParameters.IsoformProb[IsfIndex];
+                //std::cout<<IsoEmitProb[TypeIndex][IsfIndex]<<","<<EMParameters.IsoformProb[IsfIndex]<<std::endl;
+                Responsibility[TypeIndex][IsfIndex] = (IsoEmitProb[TypeIndex][IsfIndex] * EMParameters.IsoformProb[IsfIndex]);
                 MarginalProb += Responsibility[TypeIndex][IsfIndex];
             }
             //If MarginalProb=0, this type cannot be generated from any Isoform!
             //Simply Set responsibility to zero
-            for_each(Responsibility[TypeIndex].begin(),Responsibility[TypeIndex].end(),[&MarginalProb](auto& Prob){Prob=(MarginalProb==0.0)?0.0:Prob/MarginalProb;});
+            //std::cout<<"Marginal prob:"<<MarginalProb<<std::endl;
+            //std::cout<<"TypeIndex "<<TypeIndex<<std::endl;
+            
+            
+            for_each(Responsibility[TypeIndex].begin(),
+                     Responsibility[TypeIndex].end(),
+                     [&MarginalProb](auto& Prob){Prob=(MarginalProb==0.0)?0.0:Prob/MarginalProb;});
+            //std::cout<<"After marginalization:"<<std::endl;
+            //IsoLasso::utils::print1Dvector(Responsibility[TypeIndex]);         
+
+            LogLikelihood += (TypeCount[TypeIndex] * std::log(MarginalProb));
         }
-        return 0.0;
+        return LogLikelihood;
     }
 
     void
     MStep(TwoDimVec<double>& IsoEmitProb,
           const std::vector<uint32_t>& TypeCount,
           EMConfig& EMParameters,
-          const TwoDimVec<double>& Responsibility,
-          const uint32_t TotalReadCnt)
+          const TwoDimVec<double>& Responsibility)
     {
         //Update Isoform Probability and Isoform emission probability
+        auto MarginalProb {0.0};
         for(auto IsfIndex=0;IsfIndex<IsoEmitProb[0].size();++IsfIndex)
         {
-            auto MarginalProb {0};
+            auto IsfMarignalProb {0.0};
             for(auto TypeIndex=0;TypeIndex<IsoEmitProb.size();++TypeIndex)
             {
                 IsoEmitProb[TypeIndex][IsfIndex] = TypeCount[TypeIndex]*Responsibility[TypeIndex][IsfIndex];
-                MarginalProb += IsoEmitProb[TypeIndex][IsfIndex];
+                IsfMarignalProb += IsoEmitProb[TypeIndex][IsfIndex];
             }
-            //std::cout<<"MarginalProb:"<<MarginalProb<<std::endl;
-
-            //If MarginalProb=0, no type can be generated from curring Isoform
-            //Simply Set responsibility to zero            
-            EMParameters.IsoformProb[IsfIndex] = MarginalProb/double(TotalReadCnt);
-
+            
             for(auto TypeIndex=0;TypeIndex<IsoEmitProb.size();++TypeIndex)
-                IsoEmitProb[TypeIndex][IsfIndex]= (MarginalProb==0.0)?0.0:IsoEmitProb[TypeIndex][IsfIndex]/MarginalProb;
+                IsoEmitProb[TypeIndex][IsfIndex]= (IsfMarignalProb==0.0)?0.0:IsoEmitProb[TypeIndex][IsfIndex]/IsfMarignalProb;
+
+            EMParameters.IsoformProb[IsfIndex] = IsfMarignalProb;
+            MarginalProb += IsfMarignalProb;
         }
+
+        for_each(EMParameters.IsoformProb.begin(),
+                 EMParameters.IsoformProb.end(),
+                 [&MarginalProb](auto& Prob){Prob=(MarginalProb==0.0)?0.0:Prob/MarginalProb;});
+
         return;        
     }
 

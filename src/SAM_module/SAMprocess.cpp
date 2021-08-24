@@ -57,7 +57,10 @@ namespace IsoLasso::utils
         if (!fin.is_open())
             throw std::invalid_argument("Failed to open target SAM file!");
 
+        //Calculate total read count for RPKM calculation
+        std::cout<<"Now calculating number of total reads:"<<std::endl;
         IsoLasso::utils::TOTAL_READ_CNT = IsoLasso::utils::TotalReadCnt(arguments.SAMFILE);
+        std::cout<<"Total reads:"<<IsoLasso::utils::TOTAL_READ_CNT<<std::endl;
 
         IsoLasso::format::Header_record HRecord;
         IsoLasso::format::Sam_record Record;
@@ -69,7 +72,7 @@ namespace IsoLasso::utils
 
         //ThreadPool
         const auto processor_count = std::thread::hardware_concurrency();
-        thread_pool pool(1);
+        thread_pool pool(processor_count);
 
         //Header is now unavailable
         while(fin>>HRecord);
