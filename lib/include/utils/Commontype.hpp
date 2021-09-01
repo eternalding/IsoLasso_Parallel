@@ -19,9 +19,9 @@ typedef std::pair<uint32_t,uint32_t> range_type;
  * Parameters used to remove reads that spans too long and spans too many reads.
  * if an exon spans >=MAX_EXON_SPAN and covers >=MAX_JUNCTION_COVERAGE reads, this read is considered as an error read.
  */
-static constexpr uint32_t    MAX_EXON_SPAN         {100}    ;
+static constexpr uint32_t    MAX_EXON_SPAN         {500}    ;
 static constexpr uint32_t    MAX_JUNCTION_COVERAGE {100000} ;
-static constexpr uint32_t    MIN_GAP_SPAN          {100}    ; // The minimum length of the gap between two reads to be considered as separate genes.
+static constexpr uint32_t    MIN_GAP_SPAN          {500}    ; // The minimum length of the gap between two reads to be considered as separate genes.
 static constexpr uint32_t    MIN_RG_SIZE           {4}      ; // The minimum number of clustered reads to output.
 static constexpr uint32_t    MAX_PE_SPAN           {700000} ; // The minimum span between two ends of paired-end reads
 static constexpr uint32_t    MIN_EXON_COV          {1}      ; // The minimum coverage requirement for exon, setting this value small will increase the sensitivity of exon boundary

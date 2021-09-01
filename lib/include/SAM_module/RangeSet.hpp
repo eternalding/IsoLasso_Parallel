@@ -3,6 +3,7 @@
 
 #include <SAM_module/SAMrecord.hpp>
 #include <map>
+#include <algorithm>
 
 namespace IsoLasso::format
 {
@@ -10,7 +11,7 @@ namespace IsoLasso::format
     {
         public:
 
-            std::map<uint32_t,uint32_t>   coverage;
+            std::map<uint32_t,uint32_t>     coverage;
             bool                            Is_merged {false};
 
 
@@ -26,19 +27,20 @@ namespace IsoLasso::format
             inline uint32_t
             MinDistance(const uint32_t& pos)
             {
-                std::map<uint32_t,uint32_t>::iterator cvg_iter {coverage.upper_bound(pos)};
+                auto cvg_iter {coverage.upper_bound(pos)};
+
                 if(cvg_iter==coverage.end())
-                    return abs(pos+1-(coverage.rbegin()->first));
-                else if (cvg_iter->second==0)
+                    return pos+1-(coverage.rbegin()->first);
+                else if (cvg_iter->second==0) // aligned on covered region
                     return 0;
                 else
                 {
-                    uint32_t DistFromNext (abs(pos-cvg_iter->first));
+                    uint32_t DistFromNext {cvg_iter->first-pos};
                     if(cvg_iter!=coverage.begin())
                     {
                         cvg_iter--;
-                        uint32_t DistFromPrev (abs(pos+1-cvg_iter->first));
-                        return DistFromNext>DistFromPrev?DistFromPrev:DistFromNext;
+                        uint32_t DistFromPrev {pos+1-cvg_iter->first};
+                        return std::min(DistFromNext,DistFromPrev);
                     }
                     else   
                         return DistFromNext;
@@ -78,7 +80,6 @@ namespace IsoLasso::format
                     else
                         coverage.erase(cvg_iter++);
                 }
-                Is_merged = true;
                 return;
             }
 

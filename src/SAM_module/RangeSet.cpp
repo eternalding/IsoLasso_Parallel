@@ -2,7 +2,7 @@
 #include<limits>
 #include<map>
 #include<cmath>
-
+#include<algorithm>
 
 namespace IsoLasso::format
 {
@@ -29,7 +29,7 @@ namespace IsoLasso::format
 
         if(cvg_iter==coverage.end())//exon_range.first larger than all
             return exon_range.first+1-coverage.rbegin()->first;
-        else if (cvg_iter->second==0)//Someone's end+1
+        else if (cvg_iter->second==0)//Aligned on covered region
             return 0; 
         else
         {
@@ -40,8 +40,8 @@ namespace IsoLasso::format
                 {
                     cvg_iter--;
                     uint32_t DistFromStart {cvg_iter->first>exon_range.first?
-                                             cvg_iter->first-exon_range.first+1:
-                                             exon_range.first-cvg_iter->first+1};
+                                            cvg_iter->first-exon_range.first+1:
+                                            exon_range.first-cvg_iter->first+1};
                     DistFromEnd = (DistFromEnd>DistFromStart)?DistFromStart:DistFromEnd;
                 }
                 return DistFromEnd;
@@ -54,33 +54,33 @@ namespace IsoLasso::format
     uint32_t
     RangeSet::MinDistance(RangeSet& SecondRange)
     {
-        uint32_t MinDist {std::numeric_limits<uint32_t>::max()};
+        uint32_t MinDist     {std::numeric_limits<uint32_t>::max()};
         uint32_t current_min {std::numeric_limits<uint32_t>::max()};
 
         //R1->R2
         for(auto cvg_iter=coverage.begin();cvg_iter!=coverage.end();cvg_iter++)
         {
-            if(cvg_iter->second>0)
+            if(cvg_iter->second>0)//1
                 current_min = SecondRange.MinDistance(cvg_iter->first);
             else
                 current_min = SecondRange.MinDistance(cvg_iter->first-1);
             if (current_min==0)
                 return 0;
             else
-                MinDist = MinDist>current_min?current_min:MinDist;
+                MinDist = std::min(MinDist,current_min);
         }
 
         //R2->R1
         for(auto cvg_iter=SecondRange.coverage.begin();cvg_iter!=SecondRange.coverage.end();cvg_iter++)
         {
-            if(cvg_iter->second>0)
+            if(cvg_iter->second>0)//1
                 current_min = MinDistance(cvg_iter->first);
             else
                 current_min = MinDistance(cvg_iter->first-1);
             if (current_min==0)
                 return 0;
             else
-                MinDist = MinDist>current_min?current_min:MinDist;
+                MinDist = std::min(MinDist,current_min);
         }
 
         return MinDist;
@@ -101,11 +101,11 @@ namespace IsoLasso::format
         bool RemoveLastElement {IsOverlap(exon_end+1)?true:false};
 
         coverage[exon_start]++;
-        coverage[exon_end]++;
+        //coverage[exon_end]++;
         coverage[exon_end+1];//=0
 
         std::map<uint32_t,uint32_t>::iterator cvg_iter_start {coverage.find(exon_start)},
-                                                cvg_iter_end {coverage.find(exon_end)};
+                                                cvg_iter_end {coverage.find(exon_end+1)};
         
         if(cvg_iter_start!=cvg_iter_end)
         {
@@ -115,7 +115,6 @@ namespace IsoLasso::format
         }
         if(RemoveLastElement)
             coverage.erase(exon_end+1);
-        Is_merged=false;
         return;
     }
 

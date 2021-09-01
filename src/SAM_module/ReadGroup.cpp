@@ -71,12 +71,12 @@ namespace IsoLasso::format
     ReadGroup::SplitbyRangeSet(std::vector<ReadGroup>& SubRGs,const uint32_t& MIN_GAP_SPAN)
     {
         std::vector<IsoLasso::format::RangeSet> RangeSets;
-        for(auto read_index=0;read_index<ReadStart.size();read_index++)
+        for(auto read_index=0;read_index<ReadStart.size();read_index++) //For each read
         {
             if(ValidRead[read_index])
             {
                 bool NewRange {true};
-                for(auto range_index=0;range_index<RangeSets.size();range_index++)
+                for(auto range_index=0;range_index<RangeSets.size();range_index++)//For every existing range
                 {
                     if(PairendTable[read_index]==-1) // Single-End
                     {
