@@ -15,7 +15,7 @@ IsoLasso_Parallel includes the following new features:
 * Multi-thread computation using the threadpool implemented by Barak Shoshany[2] 
 * Custom designed E-M algorithm for transcipt 
 * CMake configurations with CI support and unittests for easy and stable  
-* Minor issues
+* Fixed minor issues from the original IsoLasso
 
 ## Installation
 ### 1. Requirements
@@ -37,7 +37,7 @@ IsoLasso_Parallel provides two modes:
   * Writing detailed readgroup information to an extra file (RGStats.txt)
   * Time consumption for running each phase
   
-Build IsoLasso_Parallel
+Build IsoLasso_Parallel:
 * RELEASE mode
     ```
     cmake -DCMAKE_BUILD_TYPE=RELEASE ../
