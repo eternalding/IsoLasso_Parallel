@@ -41,7 +41,7 @@ install:
   # extract the binaries; the output here is quite lengthy,
   # so we swallow it to not clutter up the travis console
   - tar -xvf cmake-3.21.2.tar.gz > /dev/null
-  - mv cmake-3.21.2.tar cmake-install
+  - mv cmake-3.21.2 cmake-install
   - cd cmake-install
   - cmake .
   - cd ../
