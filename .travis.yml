@@ -29,11 +29,13 @@ before_install:
 script:
     - whereis g++
     - whereis cmake
+    - sudo rm /usr/bin/gcc
+    - sudo rm /usr/bin/g++
     - sudo ln -s /usr/bin/gcc-10 /usr/bin/gcc
     - sudo ln -s /usr/bin/g++-10 /usr/bin/g++
     - sudo ln -s /snap/bin/cmake /usr/bin/cmake
-    - export CC=/usr/bin/gcc-10
-    - export CXX=/usr/bin/g++-10
+    - export CC=/usr/bin/gcc
+    - export CXX=/usr/bin/g++
     - gcc -v && g++ -v && cmake --version
     - cd ${TRAVIS_BUILD_DIR}
     - ls
