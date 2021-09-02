@@ -24,10 +24,6 @@ matrix:
          - MATRIX_EVAL="CC=gcc-10 && CXX=g++-10"
 
 before_install:
-    - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-    - sudo apt-get update -y
-    - sudo apt install gcc-10
-    - sudo apt install g++-10
     - eval "${MATRIX_EVAL}"
 
 script:
@@ -35,8 +31,9 @@ script:
     - whereis cmake
     - sudo ln -s /usr/bin/gcc-10 /usr/local/bin/gcc
     - sudo ln -s /usr/bin/g++-10 /usr/local/bin/g++
-    - export CC=/usr/bin/gcc-10
-    - export CXX=/usr/bin/g++-10
+    - sudo ln -s /usr/bin/cmake  /snap/bin/cmake
+    - export CC=/usr/local/bin/gcc-10
+    - export CXX=/usr/local/bin/g++-10
     - gcc -v && g++ -v && cmake --version
     - cd ${TRAVIS_BUILD_DIR}
     - ls
