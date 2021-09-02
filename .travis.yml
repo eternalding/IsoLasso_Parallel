@@ -55,7 +55,8 @@ script:
     - export CC=/usr/bin/gcc-10
     - export CXX=/usr/bin/g++-10
     - gcc -v && g++ -v && cmake --version
-    - cd eternalding/IsoLasso_Parallel
+    - cd ${TRAVIS_BUILD_DIR}
+    - ls
     - mkdir build
     - cd build
     - cmake -DCMAKE_BUILD_TYPE=RELEASE ../
