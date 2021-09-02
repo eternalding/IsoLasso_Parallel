@@ -42,6 +42,9 @@ install:
   # so we swallow it to not clutter up the travis console
   - tar -xvf cmake-3.21.2.tar.gz > /dev/null
   - mv cmake-3.21.2.tar.gz cmake-install
+  - cd cmake-install
+  - cmake .
+  - cd ../
   - sudo ln -s cmake-install/cmake /usr/local/bin/cmake
   # add both the top-level directory and the bin directory from the archive
   # to the system PATH. By adding it to the front of the path we hide the
