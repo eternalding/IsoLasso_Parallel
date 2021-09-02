@@ -89,12 +89,11 @@ add_executable(IsoLasso_Parallel src/main.cpp)
 #Pthread
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-
-target_link_libraries(IsoLasso_Parallel SAM_functions utils_functions EM_functions )
+target_link_libraries(IsoLasso_Parallel SAM_functions utils_functions EM_functions Threads::Threads)
 
 ## UnitTest
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 enable_testing()
 
 add_executable(unittest Unittest/src/SAM_IO_test.cpp Unittest/src/SAMProcess_test.cpp)
-target_link_libraries(unittest SAM_functions utils_functions EM_functions gtest_main)
+target_link_libraries(unittest SAM_functions utils_functions EM_functions gtest gtest_main Threads::Threads)
