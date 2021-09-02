@@ -21,6 +21,10 @@ matrix:
          - MATRIX_EVAL="CC=gcc-10 && CXX=g++-10"
 
 before_install:
+    - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+    - sudo apt-get update -y
+    - sudo apt install gcc-10
+    - sudo apt install g++-10
     - eval "${MATRIX_EVAL}"
 
 
