@@ -36,7 +36,7 @@ install:
   - travis_retry wget --no-check-certificate https://github.com/Kitware/CMake/releases/download/v3.21.2/cmake-3.21.2.tar.gz
   # this is optional, but useful:
   # do a quick md5 check to ensure that the archive we downloaded did not get compromised
-  - echo "d5517d949eaa8f10a149ca250e811e1473ee3f6f10935f1f69596a1e184eafc1 *cmake-3.21.2.tar.gz" > cmake_md5.txt
+  - echo "2ecc4091021c44f400bfbb25dcc77e97  cmake-3.21.2.tar.gz" > cmake_md5.txt
   - md5sum -c cmake_md5.txt
   # extract the binaries; the output here is quite lengthy,
   # so we swallow it to not clutter up the travis console
