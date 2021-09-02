@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-#include <SAM_module/ReadGroup.hpp>
-#include <EM_module/PredExpLevel.hpp>
-#include <utils/Commontype.hpp>
-#include <numeric>
-#include <algorithm>
-#include <stack>
-=======
 #include<SAM_module/ReadGroup.hpp>
 #include<EM_module/PredExpLevel.hpp>
 #include<EM_module/TreeNodes.hpp>
@@ -18,7 +10,6 @@
 #include<utils/Auxiliario.hpp>
 #include<ranges>
 
->>>>>>> EMAlgorithm
 
 namespace IsoLasso::Algorithm
 {
@@ -99,49 +90,6 @@ namespace IsoLasso::Algorithm
                 if(Is_selected)
                     Selected_Exon.push_back(exon_index); // Should start from here
             }
-<<<<<<< HEAD
-#ifdef DEBUG
-            std::cout<<"Selected Exons"<<std::endl;
-            for(auto exon:Selected_Exon)
-                std::cout<<exon<<" ";
-            std::cout<<std::endl;
-#endif
-            while(true)
-            {         
-                TwoDimVec<bool>   StackIsofs;
-                std::vector<bool> Path(NumExons,false);
-                bool              END_FLAG {true};
-                uint32_t          IsfStart,CurrentSubInst{0};    
-                
-                for(auto exon:Selected_Exon)
-                {
-                    if(!IsVisited[exon])
-                    {
-                        IsfStart = exon;
-                        END_FLAG = false;
-                        break;
-                    }
-                }
-                //All Starts are used
-                if(END_FLAG)
-                    break;
-
-                GetConnectingPaths(RG.ReadSupportMatrix,IsfStart,Path,Explv,StackIsofs,intron_retention_frac);
-                
-                /*
-                std::cout<<"Path"<<std::endl;
-                for(auto exon:Path) std::cout<<exon<<" ";
-                std::cout<<std::endl;
-
-                std::cout<<"StackIsofs"<<std::endl;
-                for(auto Isf:StackIsofs) 
-                {
-                    for(auto exon:Isf)
-                        std::cout<<exon<<" ";
-                    std::cout<<std::endl;
-                }*/
-                if(Candidate_Isfs.size()+StackIsofs.size()>MAX_ISOFORM_NUM)//Exceed maximum Isoform number
-=======
 
             bool FoundPath = false;
             for(const auto Start:Selected_Exon) 
@@ -152,7 +100,6 @@ namespace IsoLasso::Algorithm
                     FoundPath = true;
                 NumofFoundPaths += TreeTraversal(Candidate_Isfs,ExonTree,RG.ReadSupportMatrix,Explv,JuncExplv,Start,exon_min_frac,junc_exp_frac,intron_retention_frac,ExonsCoveredByIsoform);
                 if(NumofFoundPaths>=MAX_ISOFORM_NUM)// Too many candidates
->>>>>>> EMAlgorithm
                 {
                     Candidate_Isfs.clear();
                     Candidate_Isfs.shrink_to_fit();
@@ -276,16 +223,6 @@ namespace IsoLasso::Algorithm
                         IsVisited[CurrentPath.back()] = false;
                         CurrentPath.pop_back();
                     }
-<<<<<<< HEAD
-                }
-
-                // All StackIsofs found for current IsfStart were saved
-                // to Candidate_Isfs 
-                //std::cout<<"StackIsofs"<<StackIsofs.size()<<std::endl;
-                std::vector<uint32_t> SubInstIndex(StackIsofs.size(),CurrentSubInst);
-=======
->>>>>>> EMAlgorithm
-
                 }
             }
         }
@@ -374,26 +311,16 @@ namespace IsoLasso::Algorithm
 
         std::cout<<"Num exons:"<<nExons<<std::endl;
         //Init
-<<<<<<< HEAD
-        Stack.emplace_back(IsfStart);
-        Stack_Prev.emplace_back(-1);
-=======
         Stack[0]      = IsfStart;
         Stack_Prev[0] = -1;
->>>>>>> EMAlgorithm
 
         while(Stackpt>=0) //Stack is not empty
         {
             uint32_t Current_exon {Stack[Stackpt]};
             bool     ReachedEnd   {true};
-<<<<<<< HEAD
-            Path[Current_exon]  =  true; //Visited
-            if(!IsVisited[Stackpt])
-=======
             Path[Current_exon]  =   true; //Visited
 
             if(!IsVisited[Stackpt];int32_t Prev_Stackpt=Stackpt)
->>>>>>> EMAlgorithm
             {
                 IsVisited[Stackpt] = true;
                 std::vector<uint32_t>& OutDegree = ReadSupportMatrix[Current_exon]; //OutDegree for current exon
