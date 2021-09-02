@@ -34,4 +34,8 @@ script:
     - export CC=/usr/bin/gcc-10
     - export CXX=/usr/bin/g++-10
     - gcc -v && g++ -v && cmake --version
+    - cd IsoLasso_parallel
+    - mkdir build
+    - cd build
     - cmake -DCMAKE_BUILD_TYPE=RELEASE ../
+    - make

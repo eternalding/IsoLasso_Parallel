@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 # GoogleTest
 configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
