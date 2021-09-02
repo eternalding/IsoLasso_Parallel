@@ -54,7 +54,6 @@ include(cmake/tools.cmake)
 
 # ---- Add dependencies via CPM ----
 # see https://github.com/TheLartians/CPM.cmake for more info
-
 include(cmake/CPM.cmake)
 
 # PackageProject.cmake will be used to make our target installable
@@ -91,11 +90,11 @@ add_executable(IsoLasso_Parallel src/main.cpp)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-target_link_libraries(IsoLasso_Parallel SAM_functions utils_functions EM_functions Threads::Threads )
+target_link_libraries(IsoLasso_Parallel SAM_functions utils_functions EM_functions )
 
 ## UnitTest
-find_package(GTest REQUIRED)
+include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 enable_testing()
 
 add_executable(unittest Unittest/src/SAM_IO_test.cpp Unittest/src/SAMProcess_test.cpp)
-target_link_libraries(unittest SAM_functions utils_functions EM_functions gtest_main Threads::Threads )
+target_link_libraries(unittest SAM_functions utils_functions EM_functions gtest_main)
