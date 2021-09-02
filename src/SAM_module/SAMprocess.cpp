@@ -1,29 +1,26 @@
+//IsoLasso
 #include <SAM_module/SAMrecord.hpp>
 #include <SAM_module/SAMprocess.hpp>
 #include <SAM_module/ReadGroup.hpp>
 #include <utils/Commontype.hpp>
 #include <utils/ArgParser.hpp>
 #include <utils/Auxiliario.hpp>
+//STL
 #include <iostream>
 #include <fstream>
 #include <numeric>
 #include <utils/ThreadPool.hpp>
 #include <thread>
 #include <string_view>
-
-//Memory mapping
-#include <string>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <cstring>
-#include <streambuf>
-#include <istream>
-#include <sstream>
-#include <string_view>
-#include <iostream>
-
+#include <algorithm>
 #include <ctime>
+
+//Thread number for the entire process
+#ifdef DEBUG
+    const auto processor_count = 1;
+#else
+    const auto processor_count = std::thread::hardware_concurrency();
+#endif
 
 namespace IsoLasso::utils
 {
@@ -49,7 +46,6 @@ namespace IsoLasso::utils
         return output;
     }
 
-
     std::tuple<uint32_t,uint32_t>
     ReadSamFile(const IsoLasso::format::Args& arguments)
     {
@@ -71,13 +67,11 @@ namespace IsoLasso::utils
         std::vector<uint32_t> rg_size;
 
         //ThreadPool
-        const auto processor_count = std::thread::hardware_concurrency();
         thread_pool pool(processor_count);
 
         //Header is now unavailable
         while(fin>>HRecord);
         
-
         auto linecount = 0;
         //Main workflow
         while(fin>>Record)
@@ -94,8 +88,7 @@ namespace IsoLasso::utils
             if(Record.ValidBit)
             {
                 //Ignore empty RG 
-                if(RG.size()==0)
-                {}
+                if(RG.size()==0);
                 //Begin new readGroup
                 else if(Record.RName != RG.ChrName || Record.Pos > RG.CurrentRange.second + MIN_GAP_SPAN)
                 {                
@@ -111,7 +104,6 @@ namespace IsoLasso::utils
 #endif
                         Valid_RG_index++;
                         ReadCount += RG.validSize();
-                        
                         pool.submit(IsoLasso::utils::ProcessReadGroup,std::move(RG));
                     }
                     else if (RG.size()>0)// RG is not large enough
@@ -133,14 +125,13 @@ namespace IsoLasso::utils
                 //Add current record to current ReadGroup
                 RG.AddRecord(Record);
 
-                auto [current_start,current_end] = Record.GetRange();
+                auto [current_start,current_end] = std::move(Record.GetRange());
 
                 if(RG.CurrentRange.first==0)
                     RG.CurrentRange.first = current_start;
 
-                RG.CurrentRange.second = (current_end>RG.CurrentRange.second)
-                                         ?current_end
-                                         :RG.CurrentRange.second;
+                RG.CurrentRange.second = std::max(current_end,RG.CurrentRange.second);
+
 #ifdef DEBUG
                 if(RG.validSize()<10)
                     std::cout<<"["<<RG.CurrentRange.first<<","<<RG.CurrentRange.second<<"]"<<"\n";
@@ -157,13 +148,11 @@ namespace IsoLasso::utils
             }
                 
             linecount++;
-
         }//End of reading SamFILE
 
         //Last ReadGroup
         RG.RG_index = Total_RG_index;
         Valid_RG_index++;
-
 
         std::cout<<"Process last Read Group."<<std::endl;
         if(RG.ReadStart.size()>MIN_RG_SIZE)
@@ -174,15 +163,8 @@ namespace IsoLasso::utils
             std::cout<<"Number of valid reads:"<<RG.validSize()<<"\n";
 #endif
             IsoLasso::utils::ProcessReadGroup(std::move(RG));
-            //pool.submit(IsoLasso::utils::ProcessReadGroup,);   
+            std::cout<<"Finished last readgroup."<<std::endl;
         }
-        std::cout<<"Finished last readgroup."<<std::endl;
-
-        //RG_STATS_FS.close();
-        //GTF_FS.close();
-
-
-
         return {Valid_RG_index,ReadCount};
     }//end of ReadSamFile
 };//end of namespace IsoLaso::utils

@@ -36,7 +36,7 @@ endif()
 
 # Note: update this to your new project's name and version
 project(IsoLasso_Parallel
-        VERSION 1.0.0
+        VERSION 1.0.1
         LANGUAGES CXX)
 
 # ---- Include guards ----
@@ -64,19 +64,11 @@ CPMAddPackage(
   VERSION 1.0
 )
 
-# Boost 
-set(Boost_USE_STATIC_LIBS        ON)
-set(Boost_USE_MULTITHREADED      ON)
-set(Boost_USE_STATIC_RUNTIME    OFF)
-
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -std=c++20 -lpthread")
+set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS} -O3 -DDEBUG -std=c++20 -lpthread")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -std=c++20 -lpthread")
 
 aux_source_directory(. DIR_SRCS)
-
-message("${PROJECT_SOURCE_DIR}/lib/include")
-include_directories("${PROJECT_SOURCE_DIR}/lib/include" ${Boost_INCLUDE_DIRS})
-
+include_directories("${PROJECT_SOURCE_DIR}/lib/include")
 
 add_subdirectory(src/utils)
 add_subdirectory(src/EM_module)
@@ -84,7 +76,6 @@ add_subdirectory(src/SAM_module)
 link_directories(lib/include/SAM_module)
 link_directories(lib/include/EM_module)
 link_directories(lib/include/utils)
-link_directories(${Boost_LIBRARY_DIRS})
 
 add_executable(IsoLasso_Parallel src/main.cpp)
 
@@ -106,45 +97,5 @@ target_link_libraries(IsoLasso_Parallel SAM_functions utils_functions EM_functio
 find_package(GTest REQUIRED)
 enable_testing()
 
-
 add_executable(unittest Unittest/src/SAM_IO_test.cpp Unittest/src/SAMProcess_test.cpp)
-#include_directories(${Boost_INCLUDE_DIRS} ${GTest_INCLUDE_DIR} )
-#message(${Boost_LIBRARY_DIRS})
-#target_link_libraries(unittest Boost::iostreams)
 target_link_libraries(unittest SAM_functions utils_functions EM_functions gtest_main Threads::Threads )
-
-#[[
-# ---- Add source files ----
-
-FILE(GLOB_RECURSE headers CONFIGURE_DEPENDS
-"${CMAKE_CURRENT_SOURCE_DIR}/include/biomodern/container/*.hpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/include/biomodern/format/*.hpp")
-
-# ---- Create library ----
-
-add_library(BiomodernHeaders EXCLUDE_FROM_ALL ${headers})
-set_target_properties(BiomodernHeaders PROPERTIES LINKER_LANGUAGE CXX)
-
-add_library(Biomodern INTERFACE)
-set_target_properties(Biomodern PROPERTIES INTERFACE_COMPILE_FEATURES cxx_std_20)
-
-# beeing a cross-platform target, we enforce enforce standards conformance on MSVC
-target_compile_options(Biomodern INTERFACE "$<$<BOOL:${MSVC}>:/permissive->")
-
-target_include_directories(Biomodern
-INTERFACE
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>
-)
-
-# ---- Create an installable target ----
-# this allows users to install and find the library via `find_package()`.
-
-packageProject(
-  NAME ${PROJECT_NAME}
-  VERSION ${PROJECT_VERSION}
-  BINARY_DIR ${PROJECT_BINARY_DIR}
-  INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
-  INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
-)
-]]
