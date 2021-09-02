@@ -1,0 +1,33 @@
+dist: Bionic
+sudo: require
+
+language: 
+  - cpp
+compiler: 
+  - g++
+
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-10
+            - gcc-10
+            - cmake
+      env:
+         - MATRIX_EVAL="CC=gcc-10 && CXX=g++-10"
+
+before_install:
+    - eval "${MATRIX_EVAL}"
+
+
+script:
+    - sudo ln -s /usr/bin/gcc-10 /usr/local/bin/gcc
+    - sudo ln -s /usr/bin/g++-10 /usr/local/bin/g++
+    - export CC=/usr/bin/gcc-10
+    - export CXX=/usr/bin/g++-10
+    - gcc -v && g++ -v && cmake --version
+    - cmake -DCMAKE_BUILD_TYPE=RELEASE ../
