@@ -24,7 +24,6 @@ matrix:
          - MATRIX_EVAL="CC=gcc-10 && CXX=g++-10"
 
 before_install:
-    - sudo apt-get purge -y cmake* 
     - eval "${MATRIX_EVAL}"
 
 script:
@@ -32,6 +31,9 @@ script:
     - whereis cmake
     - sudo rm /usr/bin/gcc
     - sudo rm /usr/bin/g++
+    - sudo rm -r /usr/local/cmake-3.12.4
+    - sudo rm /usr/local/cmake
+    - sudo rm /usr/share/cmake
     - sudo ln -s /usr/bin/gcc-10 /usr/bin/gcc
     - sudo ln -s /usr/bin/g++-10 /usr/bin/g++
     - sudo ln -s /snap/bin/cmake /usr/bin/cmake
