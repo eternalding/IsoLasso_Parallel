@@ -37,7 +37,7 @@ TEST(SamProcess, ReadGroupCount)
     auto [RGcount,readcount]         = IsoLasso::utils::ReadSamFile(arguments);
 
     EXPECT_EQ(RGcount,2);
-    EXPECT_EQ(readcount,9901);
+    EXPECT_EQ(readcount,9908);
 
 };
 
@@ -72,7 +72,7 @@ TEST(SamProcess, SplitBySubGroup)
     auto [RGcount,readcount] = IsoLasso::utils::ReadSamFile(arguments);
 
     EXPECT_EQ(RGcount,2);
-    EXPECT_EQ(readcount,9901);
+    EXPECT_EQ(readcount,9908);
     
 };
 
