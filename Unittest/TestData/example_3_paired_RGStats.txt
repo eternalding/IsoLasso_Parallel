@@ -1,0 +1,28 @@
+* IsoLasso Parallel, Version:1.0.0
+* Start time:2021-02-22 12:01:26
+* Command:./IsoLasso_Parallel -i ../Unittest/TestData/example_3_paired.sam 
+ReadGroup 5-1
+Boundary chr1 3042485 3042739 .
+ReadLen 101
+Total valid reads:9
+Number of exons:2
+3042485 3042683 199 9 8,1,0,4.28643,
+3042684 3042739 56 1 1,1,0,1,
+SGTypes:2
+1 0 8 .
+1 1 1 .
+PETypes:4
+0 0 3 4.29497e+09
+0 1 1 4.29497e+09
+ReadGroup 7-1
+Boundary chr1 3044911 3045035 .
+ReadLen 101
+Total valid reads:7
+Number of exons:2
+3044911 3045029 119 7 7,1,0,5.88235,
+3045030 3045035 6 1 1,1,0,1,
+SGTypes:2
+1 0 6 .
+1 1 1 .
+PETypes:1
+0 1 1 4.29497e+09

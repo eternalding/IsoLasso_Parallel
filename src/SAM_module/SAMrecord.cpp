@@ -23,6 +23,11 @@ namespace IsoLasso::format
         else
             return false;    
     }
+    bool
+    MMP()
+    {
+        return true;
+    }
     ///END OF HEADRECORD
     ///START OF RECORD
     bool
@@ -49,13 +54,20 @@ namespace IsoLasso::format
             IsoLasso::utils::Setfields(Record);
             IsoLasso::utils::ParseCIGAR(Record);
 
+            //Splice Direction
+            Record.SpliceDir = 0;
             if (iss.rdbuf()->in_avail())
             {
                 std::string Opt_field;
                 while(iss>>Opt_field)
                 {
                     if (auto pos=Opt_field.find("XS:A:") ; pos!=std::string::npos)
-                        Record.SpliceDir=Opt_field[pos+5]=='+'?1:-1;
+                    {
+                        if(Opt_field[pos+5]=='+')
+                            Record.SpliceDir = 1;
+                        else if(Opt_field[pos+5]=='-')
+                            Record.SpliceDir = -1;
+                    }
                 }
             }
             return true;
@@ -178,19 +190,27 @@ namespace IsoLasso::utils
         return;
     }
 
-    //Concordant paired-end pairs : (99,147) & (83,163)
-    Record.isPairedEnd = (Record.Flag==99)||(Record.Flag==147)||(Record.Flag==83)||(Record.Flag==163)||
-                         (Record.Flag==419)||(Record.Flag==339)||(Record.Flag==355)||(Record.Flag==403);
+    std::string_view QNameSuffix(Record.QName.substr(Record.QName.length()-2));
+    if((QNameSuffix=="/1")||(QNameSuffix=="/2"))
+    {
+        Record.QName       = Record.QName.substr(0,Record.QName.length()-2);
+        Record.isPairedEnd = true;
+    }
+    else
+    {
+        //Concordant paired-end pairs : (99,147) & (83,163)
+        Record.isPairedEnd = (Record.Flag==99)||(Record.Flag==147)||(Record.Flag==83)||(Record.Flag==163)||
+                            (Record.Flag==419)||(Record.Flag==339)||(Record.Flag==355)||(Record.Flag==403);
 
-    /*
-     * If :
-     * 1. the paired-end distance is too large
-     * 2. RNEXT is identical RNAME (=) or rnext is unavailable (*)
-     * then force to use single-end version.
-     */ 
-    if(std::abs(Record.TLen)>MAX_PE_SPAN||(Record.RNext!="*" && Record.RNext!="="))
-        Record.isPairedEnd=false;
-
+        /*
+        * If :
+        * 1. the paired-end distance is too large
+        * 2. RNEXT is identical to RNAME (=) or rnext is unavailable (*)
+        * then force to use single-end version.
+        */ 
+        if(std::abs(Record.TLen)>MAX_PE_SPAN||(Record.RNext!="*" && Record.RNext!="="))
+            Record.isPairedEnd = false;
+    }
     Record.ValidBit=true;
 
     return;

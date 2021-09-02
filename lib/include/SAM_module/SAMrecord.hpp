@@ -13,8 +13,6 @@
 #include<iterator>
 #include<numeric>
 
-//extern IsoLasso::format::Args arguments;
-
 namespace IsoLasso::format
 {
     struct MetaData
@@ -35,12 +33,12 @@ namespace IsoLasso::format
         std::string         CIGAR;  //CIGAR string
         std::string         RNext;  //Reference name of the mate/next read
         uint32_t            PNext;  //Position of the mate/next read
-        __int32_t           TLen;   // observed Template LENgth
+        int32_t             TLen;   // observed Template LENgth
         std::string         Seq;    //segment SEQuence
         std::string         Qual;   //ASCII of Phred-scaled base QUALity+33
         
         // Optional fields
-        int16_t             SpliceDir   {0};
+        int32_t             SpliceDir   {0};
 
         // Indicator fields 
         bool                ValidBit    {false};
@@ -95,7 +93,7 @@ namespace IsoLasso::utils
     ParseCIGAR(IsoLasso::format::Sam_record&);
 
     inline uint32_t
-    GetEfficientLen(IsoLasso::format::Sam_record& Record)
+    GetEfficientLen(const IsoLasso::format::Sam_record& Record)
     {
         uint32_t EfficientLen {0};
         for(auto i =0;i<Record.SegmentStart.size();i++) 
@@ -105,6 +103,41 @@ namespace IsoLasso::utils
 
     void
     Setfields(format::Sam_record&);
+
+    inline uint32_t 
+    FileRead( std::istream & is, std::vector<char> & buff )
+    {
+        is.read( &buff[0], buff.size() );
+        return is.gcount();
+    }
+
+    inline uint64_t 
+    CountLines( const std::vector <char> & buff, uint32_t sz )
+    {
+        uint64_t newlines = 0;
+        const char * p = &buff[0];
+        for ( uint32_t i = 0; i < sz; i++ ) 
+        {
+            if ( p[i] == '\n' ) {
+                newlines++;
+            }
+        }
+        return newlines;
+    }
+
+    inline const uint64_t 
+    TotalReadCnt(const std::string FileName)
+    {
+        constexpr uint32_t SZ = 1024 * 1024;
+        std::vector <char> buff( SZ );
+        std::ifstream ifs(FileName);
+        uint64_t LineCnt {0};
+        while(auto cc = FileRead( ifs, buff ) ) 
+            LineCnt += CountLines( buff, cc );
+        return LineCnt;
+    }
+
+
 
 }//end of namespace IsoLasso::utils
 
