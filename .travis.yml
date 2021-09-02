@@ -29,7 +29,7 @@ before_install:
 
 
 install:    
-  - sudo apt-get remove cmake
+  - sudo apt-get purge -y cmake 
   - CMAKE_INSTALLER=install-cmake.sh
   - curl -sSL https://github.com/Kitware/CMake/releases/download/v3.21.2/cmake-3.21.2-linux-x86_64.sh -o ${CMAKE_INSTALLER}
   - chmod +x ${CMAKE_INSTALLER}
