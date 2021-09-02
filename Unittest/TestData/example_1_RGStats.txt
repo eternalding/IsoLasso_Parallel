@@ -1,0 +1,3 @@
+* IsoLasso Parallel, Version:1.0.0
+* Start time:2021-07-09 12:49:40
+* Command:./IsoLasso_Parallel -i ../Unittest/TestData/example_1.sam 
