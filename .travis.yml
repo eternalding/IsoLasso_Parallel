@@ -24,6 +24,7 @@ matrix:
          - MATRIX_EVAL="CC=gcc-10 && CXX=g++-10"
 
 before_install:
+    - sudo apt-get purge -y cmake* 
     - eval "${MATRIX_EVAL}"
 
 script:
