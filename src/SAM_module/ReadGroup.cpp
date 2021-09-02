@@ -904,33 +904,44 @@ namespace IsoLasso::utils
     void
     ProcessReadGroup(IsoLasso::format::ReadGroup RG)
     {
+
+#ifdef  DEBUG
+        auto Start_time {std::chrono::steady_clock::now()};
+#endif
         //If segments within same read has too high coverage, remove them.
         RG.RemoveLongSpanReads(MAX_EXON_SPAN,MAX_JUNCTION_COVERAGE);
         //Split RG into SubRGs
         std::vector<format::ReadGroup> SubRGs;
         RG.SplitbyRangeSet(SubRGs,MIN_GAP_SPAN);
 
-        RG.reset();
+#ifdef  DEBUG
+        IsoLasso::utils::ShowRunningTime(Start_time,"I.","Split By RangeSet");
+#endif
 
         //Process each sub-readgroup
         for(auto& SubRG:SubRGs)
         {
+
+#ifdef DEBUG
+            Start_time = std::chrono::steady_clock::now();
+#endif 
             //Enumerate all boundaries
             SubRG.CalculateBound(MIN_JUNC_COV,MIN_GAP_SPAN);
             //Calculate SGType (Combinations of high quality exon combinations)
             SubRG.CalculateType();
-
             //Remove Exons with too small coverage and not included in any junction type
             SubRG.RemoveWeakExons(MIN_CVG_FRAC);
-
             //Remove Types with Invalid exons and those reads with invalid types and recalculate coverage statistics
             SubRG.CalculateValidExons();
 
             if(SubRG.validSize() < MIN_RG_SIZE)
                 continue;
-                
             SubRG.PostProcess();
             
+#ifdef  DEBUG
+            IsoLasso::utils::ShowRunningTime(Start_time,"II.","Pre-Processing");
+#endif
+
             /* E-M Module */
             Algorithm::PredExpLevel(SubRG);
 

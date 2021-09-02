@@ -95,25 +95,30 @@ namespace IsoLasso::utils
                     RG.RG_index = Total_RG_index;
                     if(RG.size()>MIN_RG_SIZE)
                     {
-#ifdef DEBUG
-                        std::cout<<"Processing ReadGroup:"<<RG.RG_index
-                                 <<", Range:"<<RG.ChrName
-                                 <<":["<<RG.CurrentRange.first
-                                 <<","<<RG.CurrentRange.second
-                                 <<"]\n";
-#endif
                         Valid_RG_index++;
                         ReadCount += RG.validSize();
-                        pool.submit(IsoLasso::utils::ProcessReadGroup,std::move(RG));
-                    }
-                    else if (RG.size()>0)// RG is not large enough
-                    {
+
 #ifdef DEBUG
-                        std::cout<<"Read Group "<<RG.RG_index
-                                 <<" with size "<<RG.size()
-                                 <<" is not large enough!"<<std::endl;
+                        const auto Start_time {std::chrono::steady_clock::now()};
+                        std::cout<<"[ ReadGroup "<<Total_RG_index<<" ] : START"<<std::endl;
+#endif
+
+#ifdef DEBUG
+                        IsoLasso::utils::ProcessReadGroup(std::move(RG));
+#else          
+                        pool.submit(IsoLasso::utils::ProcessReadGroup,std::move(RG));
+#endif
+
+#ifdef DEBUG
+                        const auto diff {std::chrono::steady_clock::now() - Start_time};
+                        std::cout << "[ ReadGroup "<<Total_RG_index 
+                                  << " ] : "
+                                  << std::chrono::duration <double, std::milli> (diff).count() 
+                                  << " ms" << std::endl;
 #endif
                     }
+                    else if (RG.size()>0)// RG is not large enough
+                    {}
                     Total_RG_index++;               
                     RG.reset();                    
                 }
@@ -131,11 +136,6 @@ namespace IsoLasso::utils
                     RG.CurrentRange.first = current_start;
 
                 RG.CurrentRange.second = std::max(current_end,RG.CurrentRange.second);
-
-#ifdef DEBUG
-                if(RG.validSize()<10)
-                    std::cout<<"["<<RG.CurrentRange.first<<","<<RG.CurrentRange.second<<"]"<<"\n";
-#endif
             }
             if(linecount%1000000==0)
             {
@@ -159,11 +159,17 @@ namespace IsoLasso::utils
         {
             ReadCount += RG.validSize();
 #ifdef DEBUG
-            std::cout<<"Processing Last ReadGroup "<<RG.RG_index<<", Range:"<<RG.ChrName<<" ["<<RG.CurrentRange.first<<","<<RG.CurrentRange.second<<"]"<<std::endl;
-            std::cout<<"Number of valid reads:"<<RG.validSize()<<"\n";
+            const auto Start_time {std::chrono::steady_clock::now()};
+            std::cout<<"[ ReadGroup "<<Total_RG_index<<" ] : START"<<std::endl;
 #endif
             IsoLasso::utils::ProcessReadGroup(std::move(RG));
-            std::cout<<"Finished last readgroup."<<std::endl;
+#ifdef DEBUG
+            const auto diff {std::chrono::steady_clock::now() - Start_time};
+            std::cout << "[ ReadGroup "<<Total_RG_index 
+                        << " ] : "
+                        << std::chrono::duration <double, std::milli> (diff).count() 
+                        << " ms" << std::endl;
+#endif
         }
         return {Valid_RG_index,ReadCount};
     }//end of ReadSamFile

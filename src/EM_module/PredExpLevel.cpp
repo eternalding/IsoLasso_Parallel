@@ -16,16 +16,20 @@ namespace IsoLasso::Algorithm
     void
     PredExpLevel(format::ReadGroup& RG)
     {
-#ifdef DEBUG
-        utils::Check_ReadGroup(RG);
-#endif
-
         TwoDimVec<uint32_t>   Candidate_Isfs;
         std::vector<uint32_t> SubInsts;
         bool                  Reached_Max {true};
 
+#ifdef  DEBUG
+        const auto Start_time {std::chrono::steady_clock::now()};
+#endif 
         //Configs for prediction
         GenerateCandidateIsoform(RG,Candidate_Isfs,SubInsts);
+
+#ifdef  DEBUG
+        IsoLasso::utils::ShowRunningTime(Start_time,"III.","Generate Candidate Isoforms");      
+#endif
+
         //Calculate expression level with E-M algorithm
         EM_Process(RG,Candidate_Isfs,SubInsts);
 
@@ -59,44 +63,10 @@ namespace IsoLasso::Algorithm
                  IntronRetention_Left,IntronRetention_Right,
                  MaxExonExplv,MaxJuncExonExplv);
 
-#ifdef DEBUG
-        std::cout<<"Explv"<<std::endl;
-        for(auto i:Explv)
-            std::cout<<i<<" ";
-        std::cout<<std::endl;
-
-        std::cout<<"Junction level"<<std::endl;
-        for(auto i:JuncExplv)
-            std::cout<<i<<" ";
-        std::cout<<std::endl;
-
-        std::cout<<"Expression level"<<std::endl;
-        for(auto i:Explv)
-            std::cout<<i<<" ";
-        std::cout<<std::endl;
-#endif
-
         //Create tree structure
         std::vector<IsoLasso::Algorithm::ExonNode> ExonTree;
         for(auto Exon_idx=0;Exon_idx<NumExons;++Exon_idx)
             ExonTree.emplace_back(Exon_idx,RG.ReadSupportMatrix[Exon_idx],Explv,JuncExplv);
-
-        /*
-        if(RG.CurrentRange.first>=3700000 && RG.CurrentRange.first<=3800000)
-        {
-            std::cout<<RG.CurrentRange.first<<" "<<RG.CurrentRange.second<<std::endl;
-            //IsoLasso::utils::print1Dvector(Outdegree);  
-            for(auto Exon_idx=0;Exon_idx<NumExons;++Exon_idx)
-            {
-                std::cout<<"Exon "<<Exon_idx<<std::endl;
-                for(auto neighbor:ExonTree[Exon_idx].getNeighbors())
-                    std::cout<<neighbor.first<<","<<neighbor.second<<" ";
-                std::cout<<std::endl;
-                IsoLasso::utils::print1Dvector(RG.ReadSupportMatrix[Exon_idx]);
-                IsoLasso::utils::print1Dvector(Explv);
-                IsoLasso::utils::print1Dvector(JuncExplv);
-            }
-        }*/
 
         //Choose different exons as beginning
         std::vector<bool>                  ExonsCoveredByIsoform(RG.ExonBoundary.size(),false);
@@ -121,14 +91,6 @@ namespace IsoLasso::Algorithm
                     Selected_Exon.push_back(exon_index); // Should start from here
             }
 
-
-
-#ifdef DEBUG
-            std::cout<<"SelectedExons"<<std::endl;
-            IsoLasso::utils::print1Dvector(Selected_Exon);
-            std::cout<<"ExonsCoveredByIsoform"<<std::endl;
-            IsoLasso::utils::print1Dvector(ExonsCoveredByIsoform);
-#endif
             bool FoundPath = false;
             for(const auto Start:Selected_Exon) 
             {

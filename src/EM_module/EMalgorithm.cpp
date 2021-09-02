@@ -34,29 +34,35 @@ namespace IsoLasso::Algorithm
         TwoDimVec<double> SGSupport(RG.SGTypes.size(),std::vector<double>(Candidate_Isfs.size(),0));
         GetTypeSupportAndIsfDir(RG,Candidate_Isfs,SGSupport,IsfLen,IsoDir);
 
-        /*
-        std::cout<<"Assembled Isoforms:"<<std::endl;
-        IsoLasso::utils::print2Dvector(Candidate_Isfs);
-
-        std::cout<<"TypeSupport:"<<std::endl;
-        IsoLasso::utils::print2Dvector(SGSupport);
-        */
-        
         //E-M Algorithm
         EMConfig EMParameters(Candidate_Isfs.size());
+
+#ifdef  DEBUG
+        auto Start_time {std::chrono::steady_clock::now()};
+#endif 
         EMAlgorithm(Candidate_Isfs,SGSupport,RG.TypeCount,EMParameters);
+
+#ifdef  DEBUG
+        IsoLasso::utils::ShowRunningTime(Start_time,"IV.","E-M Algorithm");                      
+#endif
 
         //Write to RGFile and GTF File
         std::vector<double> ExpLv;
-
         //Calculate FPKM
         for(auto Isf_index=0;Isf_index<Candidate_Isfs.size();++Isf_index)
             ExpLv.emplace_back(EMParameters.IsoformProb[Isf_index]*double(RG.ReadCount)*10e9/(IsfLen[Isf_index]*IsoLasso::utils::TOTAL_READ_CNT));
 
         //Write to output
         IO_Mutex.lock();
-        //RG.WriteStatsToFile(IsoLasso::utils::RG_STATS_FS,Candidate_Isfs,ExpLv,IsoDir);
+#ifdef DEBUG
+        Start_time = std::chrono::steady_clock::now();
+        RG.WriteStatsToFile(IsoLasso::utils::RG_STATS_FS,Candidate_Isfs,ExpLv,IsoDir);
+#endif
         RG.WritePredToGTF(IsoLasso::utils::GTF_FS,Candidate_Isfs,ExpLv,IsoDir,EMParameters.IsoformProb);
+
+#ifdef  DEBUG
+        IsoLasso::utils::ShowRunningTime(Start_time,"V.","Write to outputs");              
+#endif
         IO_Mutex.unlock();
         return;
     }

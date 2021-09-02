@@ -75,5 +75,23 @@ namespace IsoLasso::utils
         return;
     }
 
+    inline void
+    ShowRunningTime(const std::chrono::time_point<std::chrono::steady_clock>& StartTime,
+                    const char* Phase,
+                    const char* PhaseName)
+    {
+        const auto diff {std::chrono::steady_clock::now() - StartTime};
+        std::cout << std::left      
+                  << std::setw(5)
+                  << Phase
+                  << std::setw(30)
+                  << PhaseName
+                  << ": "<<std::chrono::duration <double, std::milli> (diff).count() 
+                  << " ms" << std::endl;  
+        return;
+    }
+
+
+
 }
 #endif
