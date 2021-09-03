@@ -11,6 +11,7 @@
 #include<ranges>
 #include <mutex>
 #include <cmath>
+#include <execution>
 
 std::mutex IO_Mutex;
 std::ofstream IsoLasso::utils::RG_STATS_FS,IsoLasso::utils::GTF_FS;

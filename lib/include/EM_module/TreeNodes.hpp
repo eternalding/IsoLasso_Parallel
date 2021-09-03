@@ -8,6 +8,7 @@
 #include <queue>
 #include <utility>
 #include <ranges>
+#include <execution>
 
 namespace IsoLasso::Algorithm
 {
@@ -19,15 +20,11 @@ namespace IsoLasso::Algorithm
             std::int32_t                            Ancestor    {-1};
             std::int32_t                            LastVisited {-1};
         public:
-            ExonNode(
-                     const std::uint32_t&            Exon_index,
+            ExonNode(const std::uint32_t             Exon_index,
                      const std::vector<uint32_t>&     OutDegree,
                      const std::vector<double>&           ExpLv,
                      const std::vector<double>&          JuncLv)
             {
-                //Set Exon index
-                this->Exon_index = Exon_index;
-
                 auto ValidExons = std::ranges::views::iota(0,int(OutDegree.size()))
                                  |std::ranges::views::filter([&Exon_index](const uint32_t i) {return i>Exon_index;})
                                  |std::ranges::views::filter([&OutDegree](const auto i) { return OutDegree[i]>=MIN_JUNC_READ;});
@@ -47,7 +44,7 @@ namespace IsoLasso::Algorithm
 
                 std::ranges::copy(ValidChilds,std::back_inserter(Neighbors));
                 std::stable_sort(Neighbors.begin(), Neighbors.end(),
-                                [](auto i1, auto i2) {return i1.second < i2.second;});   
+                                 [](auto i1, auto i2) {return i1.second < i2.second;});   
             }
 
             inline const std::vector<std::pair<int32_t,int32_t>>

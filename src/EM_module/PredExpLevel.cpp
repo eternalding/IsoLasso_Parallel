@@ -482,11 +482,3 @@ namespace IsoLasso::Algorithm
 
 
 }//end of IsoLasso::Algorithm
-
-namespace IsoLasso::utils
-{
-
-
-
-
-}
