@@ -68,6 +68,9 @@ Once the program is finished, a .gtf file OUTPUT_PREFIX_isoforms.gtf recording a
 If DEBUG mode is chosen, detailed readgroup information will recorded in the OUTPUT_PREFIX_RGStats.txt  
 (The running time might be much longer due to massive I/O)
 
+## Parallel structure
+![image info](Images/Model_Structure.JPG)
+
 ## Tips for adjusting the performance of isoform assembly
 Hyperparameters were defined in lib/utils/Commontype.hpp.  
 
