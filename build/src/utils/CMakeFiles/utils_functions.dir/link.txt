@@ -1,2 +1,0 @@
-/usr/bin/ar qc libutils_functions.a  CMakeFiles/utils_functions.dir/ArgParser.cpp.o CMakeFiles/utils_functions.dir/Auxiliaryio.cpp.o
-/usr/bin/ranlib libutils_functions.a
