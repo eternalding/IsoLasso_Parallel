@@ -226,7 +226,6 @@ namespace IsoLasso::format
         }
 
         std::map<uint32_t,uint32_t> Boundary;
-        //std::cout<<CurrentRange.first<<" "<<CurrentRange.second<<std::endl;
         Boundary[CurrentRange.first] = 0;
         Boundary[CurrentRange.second+1] = 0;
 
@@ -349,11 +348,14 @@ namespace IsoLasso::format
                 continue;
             else
             {
-                auto insert {coverage.insert(std::move(std::pair<uint32_t,int32_t>(bound_iter->first,0)))};
+                auto insert {coverage.emplace(bound_iter->first,0)};
                 if(insert.second==false)//Exist
                     continue;
                 else if(insert.first->first!=(coverage.begin())->first) // Add to coverage
+                {
                     insert.first->second = std::prev(insert.first)->second;
+                    std::cout<<"aa"<<std::endl;
+                }
             }
         }
         auto Bound_iter  {Boundary.begin()};
