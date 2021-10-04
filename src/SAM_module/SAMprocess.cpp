@@ -35,7 +35,7 @@ namespace IsoLasso::utils
             const auto second = strv.find_first_of(delims, first);
 
             if (first != second)
-                output.emplace_back(strv.substr(first, second-first));
+                output.push_back(std::move(strv.substr(first, second-first)));
 
             if (second == std::string_view::npos)
                 break;

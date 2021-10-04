@@ -96,8 +96,8 @@ namespace IsoLasso::format
                         prev = cvg_iter->first;
                     else
                     {
-                        Start.emplace_back(prev);
-                        End.emplace_back(cvg_iter->first-1);
+                        Start.push_back(prev);
+                        End.push_back(cvg_iter->first-1);
                     }
                 }
                 return std::make_tuple(Start,End);

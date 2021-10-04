@@ -122,7 +122,7 @@ namespace IsoLasso::utils
         {
             auto ExonLength {Exon.second-Exon.first};
             if(ExonLength>=MaxExonLen)
-                ExonWeight.emplace_back(1);
+                ExonWeight.push_back(1);
             else
                 ExonWeight.push_back(double(ExonLength)/MaxExonLen);
         }
@@ -171,7 +171,7 @@ namespace IsoLasso::utils
             if (Isoform[ExonIndex]==false && JuncType[ExonIndex]==true)
                 return false;
             if(JuncType[ExonIndex]==true)
-                JuncIndex.emplace_back(ExonIndex);
+                JuncIndex.push_back(ExonIndex);
         }
         for(auto ExonIndex=JuncIndex.front();ExonIndex<=JuncIndex.back();ExonIndex++)
         {

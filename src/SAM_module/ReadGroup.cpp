@@ -338,24 +338,20 @@ namespace IsoLasso::format
         return;
     }
     void 
-    ReadGroup::GetCvgStats( std::map<uint32_t,int32_t>&coverage,const std::map<uint32_t,uint32_t>& Boundary,
+    ReadGroup::GetCvgStats( std::map<uint32_t,int32_t>&coverage,
+                            const std::map<uint32_t,uint32_t>& Boundary,
                             std::map<uint32_t,std::vector<double>>& CvgStats)
     {
         //Merging Boundary into coverage
         for(auto bound_iter=Boundary.begin();bound_iter!=Boundary.end();bound_iter++)
         {
-            if(coverage.count(bound_iter->first))
+            if(coverage.count(bound_iter->first)) // Exist
                 continue;
-            else
+            else // Add to coverage
             {
                 auto insert {coverage.emplace(bound_iter->first,0)};
-                if(insert.second==false)//Exist
-                    continue;
-                else if(insert.first->first!=(coverage.begin())->first) // Add to coverage
-                {
-                    insert.first->second = std::prev(insert.first)->second;
-                    std::cout<<"aa"<<std::endl;
-                }
+                if(insert.first->first!=(coverage.begin())->first) // Add to coverage
+                    insert.first->second = std::prev(insert.first)->second; //inherit the coverage from prev
             }
         }
         auto Bound_iter  {Boundary.begin()};

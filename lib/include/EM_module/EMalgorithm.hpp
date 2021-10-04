@@ -35,14 +35,14 @@ namespace IsoLasso::Algorithm
         {
             if(InitMethod=="RANDOM")
             {
-                IsoformProb = std::move(std::vector<double>(NumofIsoform));
+                IsoformProb = std::vector<double>(NumofIsoform);
                 std::generate_n(IsoformProb.begin(),NumofIsoform,[](){return rand()/(double)RAND_MAX;});
                 auto MarginalProb {std::accumulate(IsoformProb.begin(),IsoformProb.end(),0.0)};
                 for_each(IsoformProb.begin(),IsoformProb.end(),
                          [&MarginalProb](auto& Prob){Prob/=MarginalProb;});
             }
             else if(InitMethod=="UNIFORM")     
-                IsoformProb = std::move(std::vector<double>(NumofIsoform,1/double(NumofIsoform)));
+                IsoformProb = std::vector<double>(NumofIsoform,1/double(NumofIsoform));
         }
     };
 

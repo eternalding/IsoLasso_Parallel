@@ -96,11 +96,11 @@ namespace IsoLasso::format
         inline void
         AddWithoutPair(const IsoLasso::format::Sam_record& Record)
         {
-            ReadStart.emplace_back(Record.SegmentStart);
-            ReadEnd.emplace_back(Record.SegmentEnd);
-            Direction.emplace_back(Record.SpliceDir);
-            ValidRead.emplace_back(true);
-            PairendTable.emplace_back(-1);
+            ReadStart.push_back(Record.SegmentStart);
+            ReadEnd.push_back(Record.SegmentEnd);
+            Direction.push_back(Record.SpliceDir);
+            ValidRead.push_back(true);
+            PairendTable.push_back(-1);
             return;
         }
 
