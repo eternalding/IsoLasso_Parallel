@@ -362,7 +362,7 @@ namespace IsoLasso::format
         {
             auto Cvg_iter  {coverage.find(Bound_iter->first)};
             auto next_cvg_iter {coverage.find(next_Bound_iter->first)};
-            auto Inneriter {Cvg_iter},Inneriter2 {std::next(Cvg_iter)};
+            auto Inneriter {Cvg_iter},next_Inner_iter {std::next(Cvg_iter)};
             double  StartCvg    {double(Cvg_iter->second)}, 
                     Zerofrac    {0}, 
                     MaxCvg      {-1},
@@ -371,11 +371,11 @@ namespace IsoLasso::format
             while(Inneriter!=next_cvg_iter)
             {
                 MaxCvg    = (Inneriter->second>MaxCvg)?Inneriter->second:MaxCvg;
-                Zerofrac += (Inneriter->second==0)?(Inneriter2->first-Inneriter->first):0;
-                MeanCvg  += (Inneriter2->first-Inneriter->first)*Inneriter->second;
+                Zerofrac += (Inneriter->second==0)?(next_Inner_iter->first-Inneriter->first):0;
+                MeanCvg  += (next_Inner_iter->first-Inneriter->first)*Inneriter->second;
                 Inneriter++;
-                Inneriter2++;
-                if(Inneriter2==coverage.end())
+                next_Inner_iter++;
+                if(next_Inner_iter==coverage.end())
                     break;
             }
             CvgStats[Bound_iter->first]=std::move(std::vector<double>{MaxCvg,
