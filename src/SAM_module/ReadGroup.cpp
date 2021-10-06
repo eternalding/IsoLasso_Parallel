@@ -6,6 +6,7 @@
 #include <EM_module/PredExpLevel.hpp>
 #include <EM_module/EMalgorithm.hpp>
 #include <utils/ThreadPool.hpp>
+#include <algorithm>
 
 namespace IsoLasso::format
 {
@@ -53,7 +54,7 @@ namespace IsoLasso::format
                     }
                 }
             }
-            if(PairendTable[read_idx]!=-1&&read_idx<PairendTable[read_idx])
+            if(PairendTable[read_idx]!=-1&&read_idx<PairendTable[read_idx]) // Paired-end's left side
             {
                 uint32_t left_end_back {ReadEnd[read_idx].back()},right_end_front {ReadStart[PairendTable[read_idx]].front()};
                 uint32_t pair_span {right_end_front-left_end_back};
@@ -369,11 +370,9 @@ namespace IsoLasso::format
             //Cvg stats within an exon
             while(Inneriter!=next_cvg_iter)
             {
-                if(Inneriter->second>MaxCvg)
-                    MaxCvg = Inneriter->second; 
-                if(Inneriter->second==0)//length of zero coverage
-                    Zerofrac+=(Inneriter2->first-Inneriter->first);
-                MeanCvg+=(Inneriter2->first-Inneriter->first)*Inneriter->second;
+                MaxCvg    = (Inneriter->second>MaxCvg)?Inneriter->second:MaxCvg;
+                Zerofrac += (Inneriter->second==0)?(Inneriter2->first-Inneriter->first):0;
+                MeanCvg  += (Inneriter2->first-Inneriter->first)*Inneriter->second;
                 Inneriter++;
                 Inneriter2++;
                 if(Inneriter2==coverage.end())
