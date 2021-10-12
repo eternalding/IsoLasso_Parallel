@@ -29,7 +29,6 @@ namespace IsoLasso::Algorithm
 #ifdef  DEBUG
         IsoLasso::utils::ShowRunningTime(Start_time,"III.","Generate Candidate Isoforms");      
 #endif
-
         //Calculate expression level with E-M algorithm
         EM_Process(RG,Candidate_Isfs,SubInsts);
 
@@ -273,7 +272,7 @@ namespace IsoLasso::Algorithm
         {
             LeftExplv[exon_index]  /= (RG.ReadLen*EXON_READLEN_FRAC);
             RightExplv[exon_index] /= (RG.ReadLen*EXON_READLEN_FRAC);
-            JuncExplv.emplace_back((LeftExplv[exon_index]+RightExplv[exon_index])/2);
+            JuncExplv.push_back((LeftExplv[exon_index]+RightExplv[exon_index])/2);
         }
         MaxJuncExonExplv = std::ranges::max(JuncExplv);
 
@@ -281,13 +280,13 @@ namespace IsoLasso::Algorithm
         for(auto exon_index=1;exon_index<RG.ExonBoundary.size()-1;exon_index++)
         {
             if(RG.ExonBoundary[exon_index].first == RG.ExonBoundary[exon_index-1].second +1)
-                IntronRetention_Left.emplace_back(true);
+                IntronRetention_Left.push_back(true);
             else
-                IntronRetention_Left.emplace_back(false);
+                IntronRetention_Left.push_back(false);
             if(RG.ExonBoundary[exon_index].second == RG.ExonBoundary[exon_index+1].first -1)
-                IntronRetention_Right.emplace_back(true);
+                IntronRetention_Right.push_back(true);
             else
-                IntronRetention_Right.emplace_back(false);
+                IntronRetention_Right.push_back(false);
         }
         return;
     }
@@ -330,7 +329,7 @@ namespace IsoLasso::Algorithm
                 for(auto exon_idx=0;exon_idx<OutDegree.size();++exon_idx)
                 {
                     if(OutDegree[exon_idx]>=MIN_JUNC_READ)
-                        ConnectedExons.emplace_back(exon_idx);
+                        ConnectedExons.push_back(exon_idx);
                 }
 
                 std::stable_sort(ConnectedExons.begin(), ConnectedExons.end(),
@@ -385,8 +384,8 @@ namespace IsoLasso::Algorithm
 
                     for(const auto index:ConnectedExons)//Put all valid connected exons into stack
                     {
-                        Stack.emplace_back(index);
-                        Stack_Prev.emplace_back(Stackpt);
+                        Stack.push_back(index);
+                        Stack_Prev.push_back(Stackpt);
                         IsVisited[index] = false;
                     }
                     Stackpt += uint32_t(ConnectedExons.size());
@@ -407,7 +406,7 @@ namespace IsoLasso::Algorithm
                         else
                             break;
                     }
-                    StackIsofs.emplace_back(Isoform);
+                    StackIsofs.emplace_back(std::move(Isoform));
                     if(NumIsofs>=MAX_ISOFORM_NUM)
                         break;
                 }
@@ -440,8 +439,8 @@ namespace IsoLasso::Algorithm
                                [](auto i1,auto i2){return i1+(i2==true);})
                                >1)//With more than one exon
             {
-                SGJuncType.emplace_back(RG.SGTypes[Typeindex]);
-                SGJuncCount.emplace_back(RG.TypeCount[Typeindex]);
+                SGJuncType.push_back(RG.SGTypes[Typeindex]);
+                SGJuncCount.push_back(RG.TypeCount[Typeindex]);
             }
         }
 

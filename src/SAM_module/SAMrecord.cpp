@@ -148,8 +148,8 @@ namespace IsoLasso::utils
             case 'M':
                 if(junction_flag)//New segment
                 {
-                    Record.SegmentStart.emplace_back(start_pos);
-                    Record.SegmentEnd.emplace_back(start_pos+number-1);
+                    Record.SegmentStart.push_back(start_pos);
+                    Record.SegmentEnd.push_back(start_pos+number-1);
                 }
                 else 
                     Record.SegmentEnd.back()+=number;
@@ -200,7 +200,7 @@ namespace IsoLasso::utils
     {
         //Concordant paired-end pairs : (99,147) & (83,163)
         Record.isPairedEnd = (Record.Flag==99)||(Record.Flag==147)||(Record.Flag==83)||(Record.Flag==163)||
-                            (Record.Flag==419)||(Record.Flag==339)||(Record.Flag==355)||(Record.Flag==403);
+                             (Record.Flag==419)||(Record.Flag==339)||(Record.Flag==355)||(Record.Flag==403);
 
         /*
         * If :

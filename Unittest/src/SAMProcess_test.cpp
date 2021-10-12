@@ -73,7 +73,6 @@ TEST(SamProcess, SplitBySubGroup)
 
     EXPECT_EQ(RGcount,2);
     EXPECT_EQ(readcount,9908);
-    
 };
 
 TEST(SamProcess, ExonBoundary)
@@ -118,19 +117,19 @@ TEST(SamProcess, ExonBoundary)
     EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[10].first][0],2);
     EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[11].first][0],3);
     EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[12].first][0],4);
-    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[0].first][3],1);
-    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[1].first][3],2);
-    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[2].first][3],1);
-    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[3].first][3],0);
-    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[4].first][3],1);
-    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[5].first][3],0);
-    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[6].first][3],1);
-    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[7].first][3],0);
-    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[8].first][3],1);
-    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[9].first][3],1);
-    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[10].first][3],2);
-    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[11].first][3],3);
-    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[12].first][3],4);
+    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[0].first][2],1);
+    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[1].first][2],2);
+    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[2].first][2],1);
+    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[3].first][2],0);
+    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[4].first][2],1);
+    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[5].first][2],0);
+    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[6].first][2],1);
+    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[7].first][2],0);
+    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[8].first][2],1);
+    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[9].first][2],1);
+    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[10].first][2],2);
+    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[11].first][2],3);
+    EXPECT_EQ(RG.CvgStats[RG.ExonBoundary[12].first][2],4);
 }
 
 TEST(SamProcess, SGTypes)

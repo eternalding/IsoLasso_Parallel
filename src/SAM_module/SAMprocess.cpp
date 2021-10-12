@@ -61,6 +61,7 @@ namespace IsoLasso::utils
         IsoLasso::format::Header_record HRecord;
         IsoLasso::format::Sam_record Record;
         IsoLasso::format::ReadGroup RG;
+
         uint32_t Total_RG_index  {0};
         uint32_t Valid_RG_index  {0};
         uint32_t ReadCount       {0};
@@ -130,7 +131,7 @@ namespace IsoLasso::utils
                 //Add current record to current ReadGroup
                 RG.AddRecord(Record);
 
-                auto [current_start,current_end] = std::move(Record.GetRange());
+                auto [current_start,current_end] = Record.GetRange();
 
                 if(RG.CurrentRange.first==0)
                     RG.CurrentRange.first = current_start;

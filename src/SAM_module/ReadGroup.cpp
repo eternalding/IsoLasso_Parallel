@@ -371,17 +371,15 @@ namespace IsoLasso::format
             while(Inneriter!=next_cvg_iter)
             {
                 MaxCvg    = (Inneriter->second>MaxCvg)?Inneriter->second:MaxCvg;
-                Zerofrac += (Inneriter->second==0)?(next_Inner_iter->first-Inneriter->first):0;
                 MeanCvg  += (next_Inner_iter->first-Inneriter->first)*Inneriter->second;
                 Inneriter++;
                 next_Inner_iter++;
                 if(next_Inner_iter==coverage.end())
                     break;
             }
-            CvgStats[Bound_iter->first]=std::move(std::vector<double>{MaxCvg,
-                                                                      StartCvg,
-                                                                      Zerofrac/(next_cvg_iter->first-Cvg_iter->first),
-                                                                      MeanCvg/(next_cvg_iter->first-Cvg_iter->first)});
+            CvgStats[Bound_iter->first]={MaxCvg,
+                                         StartCvg,
+                                         MeanCvg/(next_cvg_iter->first-Cvg_iter->first)};
             Bound_iter++;
             next_Bound_iter++;
         }
@@ -397,7 +395,7 @@ namespace IsoLasso::format
         for(auto read_index=0;read_index<ReadStart.size();read_index++)
         {
             //Return type of current read
-            auto ReadType {std::move(GetType(ReadStart[read_index],ReadEnd[read_index],ExonCoverage,MIN_OVERLAP))};
+            auto ReadType {GetType(ReadStart[read_index],ReadEnd[read_index],ExonCoverage,MIN_OVERLAP)};
             auto TypeIter {std::find(SGTypes.begin(),SGTypes.end(),ReadType)};
 
             if(TypeIter==SGTypes.end())//New Type
@@ -430,10 +428,9 @@ namespace IsoLasso::format
                        const uint32_t& MIN_OVERLAP)
     {
         std::vector<uint32_t> ReadType;
-        auto leftmost_exon_index {0};
-        for(auto seg_index=0;seg_index<SegStart.size();seg_index++)
+        for(auto seg_index=0,leftmost_exon_index=0;seg_index<SegStart.size();seg_index++)
         {
-            //Get ovelapping exons for current read (segment)
+            //Get overlapping exons for current read (segment)
             for(auto exon_index=leftmost_exon_index;exon_index<ExonBoundary.size();exon_index++)
             {
                 uint32_t OverlapDist {utils::GetOverLapping(SegStart[seg_index],
@@ -444,21 +441,22 @@ namespace IsoLasso::format
                 {
                     if(OverlapDist<MIN_OVERLAP)//Not Large enough
                     {
-                        //First read
-                        if( seg_index==0 &&
-                            SegEnd[seg_index]>ExonBoundary[exon_index].second &&
-                            ExonBoundary[exon_index].second>SegStart[seg_index] &&
-                            SegStart[seg_index]>ExonBoundary[exon_index].first)
+                        //Adapted from the original IsoLasso, don't know why
+                        //First segment
+                        if( seg_index==0                                          &&
+                            ExonBoundary[exon_index].second > SegEnd[seg_index]   &&
+                            SegEnd[seg_index]    > ExonBoundary[exon_index].first &&
+                            ExonBoundary[exon_index].first>SegStart[seg_index])
                             continue;
-                        //Last read
-                        if( seg_index==SegStart.size()-1 &&
-                            SegEnd[seg_index]<ExonBoundary[exon_index].second &&
-                            ExonBoundary[exon_index].first<SegEnd[seg_index] &&
-                            SegStart[seg_index]<ExonBoundary[exon_index].first)
+                        //Last segment
+                        if( seg_index==SegStart.size()-1                       &&
+                            ExonBoundary[exon_index].first<SegStart[seg_index] &&
+                            SegStart[seg_index]<SegEnd[seg_index]              &&
+                            SegEnd[seg_index]<ExonBoundary[exon_index].second)
                             continue;
                     }
                     ExonCoverage[exon_index]++;
-                    ReadType.emplace_back(exon_index);
+                    ReadType.push_back(exon_index);
                     leftmost_exon_index = exon_index; // Cannot be exon++, since two segments might be mapped to same exon. 
                 }
             }
@@ -604,7 +602,6 @@ namespace IsoLasso::format
                 for(const auto& stats:Cvg_iter->second)
                     ofs<<stats<<",";
                 ofs<<std::endl;
-            
             }
         }
 
