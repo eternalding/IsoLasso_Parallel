@@ -36,7 +36,6 @@ namespace IsoLasso::utils
 
             if (first != second)
                 output.push_back(std::move(strv.substr(first, second-first)));
-
             if (second == std::string_view::npos)
                 break;
 
