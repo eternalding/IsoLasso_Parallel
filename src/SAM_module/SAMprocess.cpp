@@ -97,7 +97,6 @@ namespace IsoLasso::utils
                     {
                         Valid_RG_index++;
                         ReadCount += RG.validSize();
-
 #ifdef DEBUG
                         const auto Start_time {std::chrono::steady_clock::now()};
                         std::cout<<"[ ReadGroup "<<Total_RG_index<<" ] : START"<<std::endl;
@@ -108,7 +107,6 @@ namespace IsoLasso::utils
 #else          
                         pool.submit(IsoLasso::utils::ProcessReadGroup,std::move(RG));
 #endif
-
 #ifdef DEBUG
                         const auto diff {std::chrono::steady_clock::now() - Start_time};
                         std::cout << "[ ReadGroup "<<Total_RG_index 

@@ -25,49 +25,49 @@ namespace IsoLasso::format
     }
     ///END OF HEADRECORD
     ///START OF RECORD
-    bool
+    std::istream&
     operator>>(std::istream& fin,Sam_record& Record)
     {
         IsoLasso::format::Args arguments;
         Record.reset();
 
-        if(std::string oneline;std::getline(fin,oneline))
+        std::string oneline;
+        std::getline(fin,oneline);
+
+        if(oneline[0]=='@')
         {
-            if(oneline[0]=='@')
-            {
-                Record.ValidBit = false;
-                return true;
-            }
-            std::istringstream iss(oneline);
-            if(iss.fail())
-                throw std::invalid_argument("istringstream failure!");
+            Record.ValidBit = false;
+            return fin;
+        }
+        std::istringstream iss(oneline);
+        if(iss.fail())
+            throw std::invalid_argument("istringstream failure!");
 
-            iss>>Record.QName>>Record.Flag >>Record.RName>>Record.Pos
-               >>Record.MapQ >>Record.CIGAR>>Record.RNext>>Record.PNext
-               >>Record.TLen >>Record.Seq  >>Record.Qual;
-            
-            IsoLasso::utils::Setfields(Record);
-            IsoLasso::utils::ParseCIGAR(Record);
+        iss>>Record.QName>>Record.Flag >>Record.RName>>Record.Pos
+        >>Record.MapQ >>Record.CIGAR>>Record.RNext>>Record.PNext
+        >>Record.TLen >>Record.Seq  >>Record.Qual;
+        
+        IsoLasso::utils::Setfields(Record);
+        IsoLasso::utils::ParseCIGAR(Record);
 
-            //Splice Direction
-            Record.SpliceDir = 0;
-            if (iss.rdbuf()->in_avail())
+        //Splice Direction
+        Record.SpliceDir = 0;
+        if (iss.rdbuf()->in_avail())
+        {
+            std::string Opt_field;
+            while(iss>>Opt_field)
             {
-                std::string Opt_field;
-                while(iss>>Opt_field)
+                if (auto pos=Opt_field.find("XS:A:") ; pos!=std::string::npos)
                 {
-                    if (auto pos=Opt_field.find("XS:A:") ; pos!=std::string::npos)
-                    {
-                        if(Opt_field[pos+5]=='+')
-                            Record.SpliceDir = 1;
-                        else if(Opt_field[pos+5]=='-')
-                            Record.SpliceDir = -1;
-                    }
+                    if(Opt_field[pos+5]=='+')
+                        Record.SpliceDir = 1;
+                    else if(Opt_field[pos+5]=='-')
+                        Record.SpliceDir = -1;
                 }
             }
-            return true;
         }
-        return false;
+        return fin;
+
     }
 
     std::ostream&
@@ -156,13 +156,19 @@ namespace IsoLasso::utils
                 start_pos+=number;
                 break;
             case 'D':
+                if(junction_flag)//New segment
+                {
+                    Record.SegmentStart.push_back(start_pos);
+                    Record.SegmentEnd.push_back(start_pos+number-1);
+                }
+                else 
+                    Record.SegmentEnd.back()+=number;
                 Record.SegmentEnd.back()+=number;
-                start_pos+=number;            
+                start_pos+=number; 
                 break;
             case 'I':
             case 'H':
             case 'S':
-                break;            
             case 'P':
                 break;
             default:

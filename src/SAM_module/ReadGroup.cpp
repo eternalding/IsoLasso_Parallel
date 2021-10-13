@@ -902,6 +902,7 @@ namespace IsoLasso::utils
 #endif
         //If segments within same read has too high coverage, remove them.
         RG.RemoveLongSpanReads(MAX_EXON_SPAN,MAX_JUNCTION_COVERAGE);
+        
         //Split RG into SubRGs
         std::vector<format::ReadGroup> SubRGs;
         RG.SplitbyRangeSet(SubRGs,MIN_GAP_SPAN);
