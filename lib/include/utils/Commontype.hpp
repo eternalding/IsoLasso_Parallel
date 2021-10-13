@@ -49,7 +49,6 @@ static constexpr uint32_t    MAXPATH_PERNODE        {128}    ;
 static constexpr uint32_t    BUFFER_SIZE            {16*1024};
 static constexpr double      ISF_EXPLV_THRESHOLD    {1e-10}  ;
 
-
 namespace IsoLasso::utils
 {
     extern  std::ofstream RG_STATS_FS,GTF_FS          ;

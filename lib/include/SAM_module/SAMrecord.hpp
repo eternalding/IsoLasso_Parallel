@@ -50,7 +50,7 @@ namespace IsoLasso::format
         /*
          * I/O functions
          */
-        friend bool
+        friend std::istream&
         operator>>(std::istream& fin,IsoLasso::format::Sam_record& Record);
 
         friend std::ostream&
@@ -118,9 +118,8 @@ namespace IsoLasso::utils
         const char * p = &buff[0];
         for ( uint32_t i = 0; i < sz; i++ ) 
         {
-            if ( p[i] == '\n' ) {
+            if ( p[i] == '\n' )
                 newlines++;
-            }
         }
         return newlines;
     }

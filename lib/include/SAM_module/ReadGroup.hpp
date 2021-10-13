@@ -109,11 +109,11 @@ namespace IsoLasso::format
                        const std::vector<uint32_t>& End, 
                        const int64_t direction)
         {
-            ReadStart.emplace_back(Start);
-            ReadEnd.emplace_back(End);
-            Direction.emplace_back(direction);
-            ValidRead.emplace_back(true);
-            PairendTable.emplace_back(-1);
+            ReadStart.push_back(Start);
+            ReadEnd.push_back(End);
+            Direction.push_back(direction);
+            ValidRead.push_back(true);
+            PairendTable.push_back(-1);
             return;
         }
 
