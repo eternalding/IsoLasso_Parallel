@@ -248,7 +248,7 @@ namespace IsoLasso::format
 
         // Update Coverage Cutpoint to boundary
         // Do not insert boundaries if the maximum coverage is too low, or if the gap is too short
-        // Check adjacent ranges, if they're too close, merge them
+        // Check adjacent ranges, if they're too close, don't add them to Boundary
         for(const auto& cvg_range:Cutpoint)
         {
             if(Boundary.count(cvg_range.first)==0 && utils::ShortestDist(Boundary,cvg_range.first)>ReadLen)
@@ -334,7 +334,7 @@ namespace IsoLasso::format
             if(Cutpoint.size()>0 && Cur_range.first-Cutpoint.back().second<=MIN_GAP_SPAN)//Merge
                 Cutpoint.back().second = Cur_range.second;
             else//NewRange
-                Cutpoint.emplace_back(Cur_range);
+                Cutpoint.push_back(Cur_range);
         }
         return;
     }
@@ -372,6 +372,7 @@ namespace IsoLasso::format
             {
                 MaxCvg    = (Inneriter->second>MaxCvg)?Inneriter->second:MaxCvg;
                 MeanCvg  += (next_Inner_iter->first-Inneriter->first)*Inneriter->second;
+                Zerofrac += (Inneriter->second==0)?(next_Inner_iter->first-Inneriter->first):0;
                 Inneriter++;
                 next_Inner_iter++;
                 if(next_Inner_iter==coverage.end())
@@ -379,6 +380,7 @@ namespace IsoLasso::format
             }
             CvgStats[Bound_iter->first]={MaxCvg,
                                          StartCvg,
+                                         Zerofrac/(next_cvg_iter->first-Cvg_iter->first),
                                          MeanCvg/(next_cvg_iter->first-Cvg_iter->first)};
             Bound_iter++;
             next_Bound_iter++;
@@ -918,7 +920,7 @@ namespace IsoLasso::utils
             Start_time = std::chrono::steady_clock::now();
 #endif 
             //Enumerate all boundaries
-            SubRG.CalculateBound(MIN_JUNC_COV,MIN_GAP_SPAN);
+            SubRG.CalculateBound(MIN_JUNC_COV,MIN_GAP_SPAN);            
             //Calculate SGType (Combinations of high quality exon combinations)
             SubRG.CalculateType();
             //Remove Exons with too small coverage and not included in any junction type
