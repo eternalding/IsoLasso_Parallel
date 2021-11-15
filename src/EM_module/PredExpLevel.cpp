@@ -280,13 +280,13 @@ namespace IsoLasso::Algorithm
         for(auto exon_index=1;exon_index<RG.ExonBoundary.size()-1;exon_index++)
         {
             if(RG.ExonBoundary[exon_index].first == RG.ExonBoundary[exon_index-1].second +1)
-                IntronRetention_Left.push_back(true);
+                IntronRetention_Left[exon_index] = true;
             else
-                IntronRetention_Left.push_back(false);
+                IntronRetention_Left[exon_index] = false;
             if(RG.ExonBoundary[exon_index].second == RG.ExonBoundary[exon_index+1].first -1)
-                IntronRetention_Right.push_back(true);
+                IntronRetention_Left[exon_index] = true;
             else
-                IntronRetention_Right.push_back(false);
+                IntronRetention_Right[exon_index] = false;
         }
         return;
     }
